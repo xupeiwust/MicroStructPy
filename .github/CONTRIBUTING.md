@@ -35,7 +35,7 @@ Consider using the Python
 create a development environment.
 
 Before submitting your changes for review, make sure to check that your
-changes do not break any tests. 
+changes do not break any tests.
 Install [tox](https://tox.readthedocs.io) and run it from the top-level project
 directory.
 Tox will run tests on the code, the documentation, the build, and the code
