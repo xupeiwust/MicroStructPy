@@ -145,10 +145,18 @@ jobs:
     - name: Lint with isort
       run: |
         isort --verbose --check-only --diff --recursive src tests setup.py
-    - name: Install package
+    # venv method from https://github.com/github/super-linter/issues/157#issuecomment-648850330
+    - name: Build virtual environment
       run: |
-        pip install setuptools wheel
-        pip install -r requirements.txt
-        pip install -e .
+        python -m venv .venv
+        .venv/bin/pip install setuptools wheel
+        .venv/bin/pip install -r requirements.txt
+        .venv/bin/pip install -e .
+    - name: Move dependencies
+      run: mv  .venv /home/runner/worrk/_temp/_github_workflow
     - name: Lint with GitHub Super-Linter
       uses: github/super-linter@v3.1.0
+        env:
+          VALIDATE_ALL_CODEBASE: true
+          PYTHONPATH: "/github/workspace/:\
+            /github/workflow/.venv/lib/python3.6/site-packages"
