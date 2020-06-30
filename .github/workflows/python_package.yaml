@@ -145,5 +145,10 @@ jobs:
     - name: Lint with isort
       run: |
         isort --verbose --check-only --diff --recursive src tests setup.py
+    - name: Install package
+      run: |
+        pip install setuptools wheel
+        pip install -r requirements.txt
+        pip install -e .
     - name: Lint with GitHub Super-Linter
       uses: github/super-linter@v3.1.0
