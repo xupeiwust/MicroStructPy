@@ -153,7 +153,7 @@ jobs:
         .venv/bin/pip install -r requirements.txt
         .venv/bin/pip install -e .
     - name: Move dependencies
-      run: mv  .venv /home/runner/worrk/_temp/_github_workflow
+      run: mv  .venv /home/runner/work/_temp/_github_workflow
     - name: Lint with GitHub Super-Linter
       uses: github/super-linter@v3.1.0
       env:
