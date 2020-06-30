@@ -156,7 +156,7 @@ jobs:
       run: mv  .venv /home/runner/worrk/_temp/_github_workflow
     - name: Lint with GitHub Super-Linter
       uses: github/super-linter@v3.1.0
-        env:
-          VALIDATE_ALL_CODEBASE: true
-          PYTHONPATH: "/github/workspace/:\
-            /github/workflow/.venv/lib/python3.6/site-packages"
+      env:
+        VALIDATE_ALL_CODEBASE: true
+        PYTHONPATH: "/github/workspace/:\
+          /github/workflow/.venv/lib/python3.6/site-packages"
