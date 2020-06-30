@@ -36,12 +36,6 @@ jobs:
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 src tests setup.py --exclude=__init__.py --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 src tests setup.py --exclude=__init__.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
         pytest --cov=src tests/
@@ -81,12 +75,6 @@ jobs:
         if [-z pip list | grep -F matplotlib]; then brew install pkg-config; fi
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 src tests setup.py --exclude=__init__.py --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 src tests setup.py --exclude=__init__.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
         pytest
@@ -114,12 +102,46 @@ jobs:
     - name: Install check dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install setuptools wheel check-manifest isort twine
-    - name: Check package import order
-      run: |
-        isort --verbose --check-only --diff --recursive src tests setup.py
-    - name: Check package contents
+        pip install setuptools wheel check-manifest twine
+    - name: Check package metadata
       run: |
         python setup.py sdist check --strict --metadata
+    - name: Check package contents
+      run: |
         check-manifest
         twine check dist/*
+
+  lint:
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ~/.cache/pip
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install lint dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 isort
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 src tests setup.py --exclude=__init__.py --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 src tests setup.py --exclude=__init__.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Lint with isort
+      run: |
+        isort --verbose --check-only --diff --recursive src tests setup.py
+    - name: Lint with GitHub Super-Linter
+      uses: github/super-linter@v3.1.0
