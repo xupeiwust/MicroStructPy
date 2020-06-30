@@ -72,7 +72,7 @@ jobs:
         pip install flake8 pytest
     - name: Install package
       run: |
-        if [-z pip list | grep -F matplotlib]; then brew install pkg-config; fi
+        brew install pkg-config
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
     - name: Test with pytest
