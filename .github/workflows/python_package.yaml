@@ -106,9 +106,11 @@ jobs:
     - name: Check package metadata
       run: |
         python setup.py sdist check --strict --metadata
-    - name: Check package contents
+    - name: Check package manifest
       run: |
         check-manifest
+    - name: Check package long description
+      run: |
         twine check dist/*
 
   lint:
