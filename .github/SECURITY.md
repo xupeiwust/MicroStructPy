@@ -1,23 +1,30 @@
-# Brand Promise
+# Security
+## Brand Promise
 
 The MicroStructPy team and community take security bugs in MicroStructPy seriously. We appreciate your efforts to responsibly disclose your findings, and will make every effort to acknowledge your contributions.
 
-# Scope
+## Scope
 
 If you believe you've found a security issue in software that is maintained in this repository, we encourage you to notify us.
 
-| Version | In scope           | Source code                                           |
-| ------- | ------------------ | ----------------------------------------------------- |
-| latest  | :white_check_mark: | https://github.com/kip-hart/MicroStructPy             |
-| v1.1.0  | :white_check_mark: | https://github.com/kip-hart/MicroStructPy/tree/v1.1.0 |
-| v1.0.1  | :white_check_mark: | https://github.com/kip-hart/MicroStructPy/tree/v1.0.1 |
-| v1.0.0  | :white_check_mark: | https://github.com/kip-hart/MicroStructPy/tree/v1.0.0 |
+| Version | In scope           | Source code                                                     |
+| ------- | ------------------ | --------------------------------------------------------------- |
+| latest  | :white_check_mark: | [latest](https://github.com/kip-hart/MicroStructPy)             |
+| v1.3.0  | :white_check_mark: | [v1.3.0](https://github.com/kip-hart/MicroStructPy/tree/v1.3.0) |
+| v1.2.2  | :white_check_mark: | [v1.2.2](https://github.com/kip-hart/MicroStructPy/tree/v1.2.2) |
+| v1.2.1  | :white_check_mark: | [v1.2.1](https://github.com/kip-hart/MicroStructPy/tree/v1.2.1) |
+| v1.2.0  | :white_check_mark: | [v1.2.0](https://github.com/kip-hart/MicroStructPy/tree/v1.2.0) |
+| v1.1.2  | :white_check_mark: | [v1.1.2](https://github.com/kip-hart/MicroStructPy/tree/v1.1.2) |
+| v1.1.1  | :white_check_mark: | [v1.1.1](https://github.com/kip-hart/MicroStructPy/tree/v1.1.1) |
+| v1.1.0  | :white_check_mark: | [v1.1.0](https://github.com/kip-hart/MicroStructPy/tree/v1.1.0) |
+| v1.0.1  | :white_check_mark: | [v1.0.1](https://github.com/kip-hart/MicroStructPy/tree/v1.0.1) |
+| v1.0.0  | :white_check_mark: | [v1.0.0](https://github.com/kip-hart/MicroStructPy/tree/v1.0.0) |
 
-# How to Submit a Report
+## How to Submit a Report
 
-To submit a vulnerability report, please use Tidelift (https://tidelift.com/security). Your submission will be reviewed and validated by a member of our team.
+To submit a vulnerability report, please use [Tidelift](https://tidelift.com/security). Your submission will be reviewed and validated by a member of our team.
 
-# Safe Harbor
+## Safe Harbor
 
 We support safe harbor for security researchers who:
 
@@ -29,7 +36,7 @@ We will consider activities conducted consistent with this policy to constitute 
 
 Please submit a report to us before engaging in conduct that may be inconsistent with or unaddressed by this policy.
 
-# Preferences
+## Preferences
 
 * Please provide detailed reports with reproducible steps and a clearly defined impact.
 * Include the version number of the vulnerable package in your report
