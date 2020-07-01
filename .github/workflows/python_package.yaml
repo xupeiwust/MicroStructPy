@@ -147,10 +147,10 @@ jobs:
         isort --verbose --check-only --diff --recursive src tests setup.py
     - name: Install package
       env:
-        PYTHONPATH: "/opt/hostedtoolcache/Python/3.8.3/x64"
+        pythonLocation: /opt/hostedtoolcache/Python/3.8.3/x64
       run: |
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        pip install -e .
+        python -m pip install -r requirements.txt
+        pyhton -m pip install -e .
     - name: Lint with GitHub Super-Linter
       uses: github/super-linter@v3.1.1
     # venv method from https://github.com/github/super-linter/issues/157#issuecomment-648850330

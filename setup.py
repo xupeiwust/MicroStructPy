@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
+"""setup.py file for MicroStructPy"""
 from __future__ import absolute_import
 from __future__ import print_function
 
@@ -12,14 +13,14 @@ from os.path import splitext
 from setuptools import find_packages
 from setuptools import setup
 
-desc = 'Microstructure modeling, mesh generation, analysis, and visualization.'
-
 
 def read(*fname):
+    """Read file"""
     return open(join(dirname(__file__), *fname)).read()
 
 
 def find_version(*fname):
+    """Read version from file"""
     ver_str = ''
     for line in read(*fname).split('\n'):
         if line.startswith('__version__') and '=' in line:
@@ -32,7 +33,8 @@ setup(
     name='microstructpy',
     version=find_version('src', 'microstructpy', '__init__.py'),
     license='MIT License',
-    description=desc,
+    description='Microstructure modeling, mesh generation, analysis, '\
+                'and visualization.',
     long_description=read('README.rst'),
     long_description_content_type=' text/x-rst',
     author='Kenneth (Kip) Hart',
