@@ -24,7 +24,54 @@ welcome_fnames = ['intro_2_quality/trimesh.png',
                   'two_phase_3D/trimesh.png',
                   'colormap/trimesh.png']
 
-def main():
+
+def create_welcome():
+    """Show examples in one image"""
+    _, axes = plt.subplots(2, 3, figsize=(21, 15))
+    plt.subplots_adjust(wspace=0.05, hspace=0)
+    for i, fname in enumerate(welcome_fnames):
+        filename = os.path.join(example_dir, fname)
+        im = plt.imread(filename)
+
+        row_num = int(i / 3)
+        col_num = i % 3
+        ax = axes[row_num, col_num]
+        ax.imshow(im)
+
+        ax.set_axis_off()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+    sub_fname = 'welcome_examples.png'
+    sub_filename = os.path.join(example_dir, sub_fname)
+    plt.savefig(sub_filename, pad_inches=0, bbox_inches='tight', dpi=200)
+    plt.close('all')
+
+
+def seed_poly_tri(filepath):
+    """Combine seeds, polymesh, and trimesh into one figure"""
+    basenames = ['seeds.png', 'polymesh.png', 'trimesh.png']
+    ex_path = os.path.join(example_dir, filepath)
+    _, axes = plt.subplots(1, 3, figsize=(20, 10))
+    plt.subplots_adjust(wspace=0.05, hspace=0)
+    for i, fname in enumerate(basenames):
+        filename = os.path.join(ex_path, fname)
+        im = plt.imread(filename)
+
+        ax = axes[i]
+        ax.imshow(im)
+
+        ax.set_axis_off()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+    sub_fname = 'joined.png'
+    sub_filename = os.path.join(ex_path, sub_fname)
+    plt.savefig(sub_filename, pad_inches=0, bbox_inches='tight', dpi=300)
+    plt.close('all')
+
+
+if __name__ == '__main__':
     # Copy Supporting Files
     supporting_files = ['aphanitic_cdf.csv', 'olivine_cdf.csv']
     for fname in supporting_files:
@@ -50,54 +97,3 @@ def main():
 
     # Create example subfigures
     seed_poly_tri('.')
-
-
-def create_welcome():
-    fig, axes = plt.subplots(2, 3, figsize=(21, 15))
-    plt.subplots_adjust(wspace=0.05, hspace=0)
-    for i, fname in enumerate(welcome_fnames):
-        filename = os.path.join(example_dir, fname)
-        im = plt.imread(filename)
-        
-        row_num = int(i / 3)
-        col_num = i % 3
-        ax = axes[row_num, col_num]
-        ax.imshow(im)
-
-        ax.set_axis_off()
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-
-    sub_fname = 'welcome_examples.png'
-    sub_filename = os.path.join(example_dir, sub_fname)
-    plt.savefig(sub_filename, pad_inches=0, bbox_inches='tight', dpi=200)
-    plt.close('all')
-
-
-def seed_poly_tri(filepath):
-    basenames = ['seeds.png', 'polymesh.png', 'trimesh.png']
-    ex_path = os.path.join(example_dir, filepath)
-    fig, axes = plt.subplots(1, 3, figsize=(20, 10))
-    plt.subplots_adjust(wspace=0.05, hspace=0)
-    for i, fname in enumerate(basenames):
-        filename = os.path.join(ex_path, fname)
-        im = plt.imread(filename)
-
-        ax = axes[i]
-        ax.imshow(im)
-
-        ax.set_axis_off()
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-    
-    sub_fname = 'joined.png'
-    sub_filename = os.path.join(ex_path, sub_fname)
-    plt.savefig(sub_filename, pad_inches=0, bbox_inches='tight', dpi=300)
-    plt.close('all')
-
-
-if __name__ == '__main__':
-    main()
-    
-
-

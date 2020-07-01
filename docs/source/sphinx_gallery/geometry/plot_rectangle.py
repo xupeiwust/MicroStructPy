@@ -5,17 +5,12 @@ Plot figures relevant to :class:`microstructpy.geometry.Rectangle`
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib import collections
 
 import microstructpy as msp
 
-def main():
-    # Plot breakdown
-    breakdown(2.5, 1, 0.3, (9, 4))  # rectangle_001.png - rect breakdown
-    breakdown(1, 1, 0.2, (4, 4))  # rectangle_001.png - square breakdown
-
 
 def breakdown(length, width, x1, figsize):
+    """Plot rectangle breakdown"""
     r = msp.geometry.Rectangle(length=length, width=width)
     approx = r.approximate(x1=x1)
 
@@ -42,4 +37,6 @@ def breakdown(length, width, x1, figsize):
 
 if __name__ == '__main__':
     plt.rc('savefig', dpi=300, bbox='tight', pad_inches=0)
-    main()
+    # Plot breakdown
+    breakdown(2.5, 1, 0.3, (9, 4))  # rectangle_001.png - rect breakdown
+    breakdown(1, 1, 0.2, (4, 4))  # rectangle_001.png - square breakdown
