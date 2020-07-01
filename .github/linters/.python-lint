@@ -1,2 +1,22 @@
 [MASTER]
 init-hook='import sys; sys.path.append("/home/runner/work/MicroStructPy/MicroStructPy")'
+
+[TYPECHECK]
+
+# List of module names for which member attributes should not be checked
+# (useful for modules/projects where namespaces are manipulated during runtime
+# and thus existing member attributes cannot be deduced by static analysis. It
+# supports qualified module names, as well as Unix pattern matching.
+ignored-modules=aabbtree,
+                matplotlib,
+                meshpy,
+                numpy,
+                pybind11,
+                pyquaternion,
+                pyvoro,
+                scipy,
+                sphinx,
+                sphinx-gallery,
+                xmltodict,
+                tox,
+                lsq-ellipse
