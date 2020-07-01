@@ -148,3 +148,13 @@ jobs:
         isort --verbose --check-only --diff --recursive src tests setup.py
     - name: Lint with GitHub Super-Linter
       uses: docker://github/super-linter:v3
+
+  security:
+
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Run Snyk to check for vulnerabilities
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
