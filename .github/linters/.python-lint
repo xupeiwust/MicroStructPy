@@ -1,28 +1,6 @@
 [MASTER]
 init-hook='import sys; sys.path.append("/home/runner/work/MicroStructPy/MicroStructPy")'
 
-[TYPECHECK]
-
-# List of module names for which member attributes should not be checked
-# (useful for modules/projects where namespaces are manipulated during runtime
-# and thus existing member attributes cannot be deduced by static analysis. It
-# supports qualified module names, as well as Unix pattern matching.
-ignored-modules=aabbtree,
-                matplotlib,
-                meshpy,
-                microstructpy,
-                numpy,
-                pybind11,
-                pyquaternion,
-                pyvoro,
-                scipy,
-                sphinx,
-                sphinx-gallery,
-                xmltodict,
-                tox,
-                lsq-ellipse
-
-
 [MESSAGES CONTROL]
 
 # Only show warnings with the listed confidence levels. Leave empty to show
@@ -38,4 +16,5 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use"--disable=all --enable=classes
 # --disable=W"
-disable=invalid-name
+disable=invalid-name,
+        import-error

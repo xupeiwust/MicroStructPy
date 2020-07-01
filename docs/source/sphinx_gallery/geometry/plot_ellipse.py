@@ -4,7 +4,7 @@ Plot figures relevant to :class:`microstructpy.geometry.Ellipse`
 """
 
 import matplotlib.pyplot as plt
-import numpy as numpy
+import numpy as np
 
 import microstructpy as msp
 

@@ -401,7 +401,7 @@ class SeedList(object):
                 else:
                     seed_args[seed_num][key] = val
 
-        n = self[0].geometry.n_dim
+        n = self.__getitem__(0).geometry.n_dim
         if n == 2:
             ax = plt.gca()
         else:
@@ -621,7 +621,7 @@ class SeedList(object):
                 else:
                     seed_args[seed_num][key] = val
 
-        n = self[0].geometry.n_dim
+        n = self.__getitem__(0).geometry.n_dim
         if n == 2:
             ax = plt.gca()
         else:
