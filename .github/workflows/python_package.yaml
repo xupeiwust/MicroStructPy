@@ -145,6 +145,8 @@ jobs:
     - name: Lint with isort
       run: |
         isort --verbose --check-only --diff --recursive src tests setup.py
+    - name: Lint with GitHub Super-Linter
+      uses: github/super-linter@v3.1.1
     # venv method from https://github.com/github/super-linter/issues/157#issuecomment-648850330
     # - name: Build virtual environment
     #   run: |
