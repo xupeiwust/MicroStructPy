@@ -149,8 +149,9 @@ jobs:
       env:
         pythonLocation: /opt/hostedtoolcache/Python/3.8.3/x64
       run: |
+        which python
         python -m pip install -r requirements.txt
-        pyhton -m pip install -e .
+        python -m pip install -e .
     - name: Lint with GitHub Super-Linter
       uses: github/super-linter@v3.1.1
     # venv method from https://github.com/github/super-linter/issues/157#issuecomment-648850330
