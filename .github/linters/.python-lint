@@ -1,2 +1,2 @@
 [MASTER]
-init-hook='import sys; sys.path.append("/path/to/root")'
+init-hook='import sys; sys.path.append("/home/runner/work/MicroStructPy/MicroStructPy")'
