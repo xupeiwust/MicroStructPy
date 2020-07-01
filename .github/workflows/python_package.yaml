@@ -146,6 +146,8 @@ jobs:
       run: |
         isort --verbose --check-only --diff --recursive src tests setup.py
     - name: Install package
+      env:
+        PYTHONPATH: "/optt/hostedtoolcache/Python/3.8.3/x64"
       run: |
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
