@@ -12,13 +12,13 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
 
     steps:
-    - uses: actions/checkout
+    - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
-      uses: actions/cache
+      uses: actions/cache@v2
       with:
         # This path is specific to Ubuntu
         path: ~/.cache/pip
@@ -52,13 +52,13 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout
+    - uses: actions/checkout@v2
     - name: Set up Python
-      uses: actions/setup-python
+      uses: actions/setup-python@v2
       with:
         python-version: '3.x'
     - name: Cache pip
-      uses: actions/cache
+      uses: actions/cache@v2
       with:
         # This path is specific to Ubuntu
         path: ~/Library/Caches/pip
@@ -85,13 +85,13 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout
+    - uses: actions/checkout@v2
     - name: Set up Python
-      uses: actions/setup-python
+      uses: actions/setup-python@v2
       with:
         python-version: '3.x'
     - name: Cache pip
-      uses: actions/cache
+      uses: actions/cache@v2
       with:
         # This path is specific to Ubuntu
         path: ~/.cache/pip
@@ -118,13 +118,13 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout
+    - uses: actions/checkout@v2
     - name: Set up Python
-      uses: actions/setup-python
+      uses: actions/setup-python@v2
       with:
         python-version: '3.x'
     - name: Cache pip
-      uses: actions/cache
+      uses: actions/cache@v2
       with:
         # This path is specific to Ubuntu
         path: ~/.cache/pip
