@@ -74,9 +74,8 @@ def seed_poly_tri(filepath):
 if __name__ == '__main__':
     # Copy Supporting Files
     supporting_files = ['aphanitic_cdf.csv', 'olivine_cdf.csv']
-    for fname in supporting_files:
-        filename = os.path.join(example_dir, fname)
-        shutil.copy(filename, '.')
+    for basename in supporting_files:
+        shutil.copy(os.path.join(example_dir, basename), '.')
 
     # Run XML files
     xml_pattern = os.path.join(example_dir, '*.xml')
