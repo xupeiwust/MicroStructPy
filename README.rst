@@ -180,11 +180,11 @@ advised by Prof. Julian Rimoli.
 
 .. SHIELDS
 
-.. |s-ci| image:: https://github.com/kip-hart/MicroStructPy/workflows/CI/badge.svg
+.. |s-ci| image:: https://img.shields.io/github/workflow/status/kip-hart/MicroStructPy/CI?labelColor=grey&logo=GitHub
     :target: https://github.com/kip-hart/MicroStructPy/actions
     :alt: Continuous Integration
 
-.. |s-license| image:: https://img.shields.io/github/license/kip-hart/MicroStructPy
+.. |s-license| image:: https://img.shields.io/github/license/kip-hart/MicroStructPy?color=brightgreen
     :target: https://github.com/kip-hart/MicroStructPy/blob/master/LICENSE.rst
     :alt: License
 
