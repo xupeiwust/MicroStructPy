@@ -1,3 +1,4 @@
+"""Create mesh from image example."""
 import os
 import shutil
 

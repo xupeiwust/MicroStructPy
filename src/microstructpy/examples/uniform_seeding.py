@@ -1,3 +1,4 @@
+"""Uniform seeding example."""
 from __future__ import division
 
 import os

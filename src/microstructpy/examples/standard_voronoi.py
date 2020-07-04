@@ -1,3 +1,4 @@
+"""Standard Voronoi diagram example."""
 import os
 
 import matplotlib.pyplot as plt

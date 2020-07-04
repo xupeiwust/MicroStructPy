@@ -1,3 +1,4 @@
+"""MicroStructPy module."""
 import microstructpy.cli
 import microstructpy.geometry
 import microstructpy.meshing

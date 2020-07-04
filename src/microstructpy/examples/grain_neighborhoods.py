@@ -1,3 +1,4 @@
+"""Grain neighboorhood example."""
 from __future__ import division
 
 import os
