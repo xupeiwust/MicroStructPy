@@ -109,32 +109,7 @@ class Ellipse:
         yc += pt_cen[1]
 
         # Find pair closest to self
-        s = np.sin(phi)
-        c = np.cos(phi)
-        rot = np.array([[c, -s], [s, c]])
-
-        x_ax_seed = np.array(self.matrix)[:, 0]
-        x_dot, y_dot = rot.T.dot(x_ax_seed)
-
-        if np.abs(x_dot) > np.abs(y_dot):
-            if x_dot > 0:
-                x_ax_fit = rot[:, 0]
-            else:
-                x_ax_fit = - rot[:, 0]
-
-            a = width
-            b = height
-        else:
-            if y_dot > 0:
-                x_ax_fit = rot[:, 1]
-            else:
-                x_ax_fit = - rot[:, 1]
-
-            a = height
-            b = width
-
-        ang_diff = np.arcsin(np.cross(x_ax_seed, x_ax_fit))
-        ang_rad = self.angle_rad + ang_diff
+        a, b, ang_rad = _fit_closest(phi, width, height)
 
         return type(self)(center=(xc, yc), a=a, b=b, angle_rad=ang_rad)
 
@@ -277,7 +252,7 @@ class Ellipse:
                 return 0.25 * np.pi * s_dist * s_dist
             return 0.25 * np.pi * s_dist.moment(2)
 
-        elif ('a' in kwargs) and ('b' in kwargs):
+        if ('a' in kwargs) and ('b' in kwargs):
             exp = np.pi
             for kw in ('a', 'b'):
                 dist = kwargs[kw]
@@ -287,7 +262,7 @@ class Ellipse:
                     mu = dist.moment(1)
                 exp *= mu
             return exp
-        elif ('b' in kwargs) and ('aspect_ratio' in kwargs):
+        if ('b' in kwargs) and ('aspect_ratio' in kwargs):
             exp = np.pi
             try:
                 exp *= kwargs['b'].moment(2)
@@ -299,7 +274,7 @@ class Ellipse:
             except AttributeError:
                 exp *= kwargs['aspect_ratio']
             return exp
-        elif ('a' in kwargs) and ('aspect_ratio' in kwargs):
+        if ('a' in kwargs) and ('aspect_ratio' in kwargs):
             n = 1000
             try:
                 a = kwargs['a'].rvs(size=n)
@@ -311,10 +286,10 @@ class Ellipse:
             except AttributeError:
                 k = np.full(n, kwargs['aspect_ratio'])
             return np.pi * np.mean((a * a) / k)
-        else:
-            e_str = 'Could not calculate expected area from keywords '
-            e_str += str(kwargs.keys()) + '.'
-            raise KeyError(e_str)
+
+        e_str = 'Could not calculate expected area from keywords '
+        e_str += str(kwargs.keys()) + '.'
+        raise KeyError(e_str)
 
     # ----------------------------------------------------------------------- #
     # Bounding Circles                                                        #
@@ -633,3 +608,33 @@ def _get_orientation(kwargs):
     else:
         angle = 0
     return angle
+
+
+def _fit_closest(phi, width, height):
+    s = np.sin(phi)
+    c = np.cos(phi)
+    rot = np.array([[c, -s], [s, c]])
+
+    x_ax_seed = np.array(self.matrix)[:, 0]
+    x_dot, y_dot = rot.T.dot(x_ax_seed)
+
+    if np.abs(x_dot) > np.abs(y_dot):
+        if x_dot > 0:
+            x_ax_fit = rot[:, 0]
+        else:
+            x_ax_fit = - rot[:, 0]
+
+        a = width
+        b = height
+    else:
+        if y_dot > 0:
+            x_ax_fit = rot[:, 1]
+        else:
+            x_ax_fit = - rot[:, 1]
+
+        a = height
+        b = width
+
+    ang_diff = np.arcsin(np.cross(x_ax_seed, x_ax_fit))
+    ang_rad = self.angle_rad + ang_diff
+    return a, b, ang_rad
