@@ -166,14 +166,14 @@ class Sphere(NSphere):
 
         mod_kwargs = {}
         for key, val in kwargs.items():
-            if key == 'facecolors' and type(val) != list:
+            if key == 'facecolors' and not isinstance(val, list):
                 mod_kwargs['color'] = val
             else:
                 mod_kwargs[key] = val
         ax.plot_surface(xx, yy, zz, **mod_kwargs)
 
 
-def _plot_pts(r=1, center=[0, 0, 0], n_pts=12):
+def _plot_pts(r=1, center=(0, 0, 0), n_pts=12):
     u = np.linspace(0, 2 * np.pi, n_pts-1)
     cv = np.linspace(-1, 1, n_pts)
     uu, cvv = np.meshgrid(u, cv)
