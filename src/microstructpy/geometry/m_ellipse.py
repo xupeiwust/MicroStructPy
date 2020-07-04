@@ -420,22 +420,11 @@ class Ellipse:
     def limits(self):
         """list: List of (lower, upper) bounds for the bounding box"""
         theta = self.angle_rad
-        tan_t = np.tan(theta)
-
-        tan_tx = - self.b / self.a * tan_t
-        tx_max = np.arctan(tan_tx)
-        tx_min = np.pi + tx_max
-
-        if np.isclose(tan_t, 0) and np.cos(theta) > 0:
-            ty_max = 0.5 * np.pi
-            ty_min = - 0.5 * np.pi
-        elif np.isclose(tan_t, 0) and np.cos(theta) < 0:
-            ty_max = -0.5 * np.pi
-            ty_min = 0.5 * np.pi
-        else:
-            tan_ty = self.b / (self.a * np.tan(theta))
-            ty_max = (np.arctan(tan_ty) + np.pi) % np.pi
-            ty_min = np.pi + ty_max
+        ang_limits = _limits_t(self.a, self.b, theta)
+        tx_min = ang_limits[0][0]
+        tx_max = ang_limits[0][1]
+        ty_min = ang_limits[1][0]
+        ty_max = ang_limits[1][1]
 
         def xp(t):
             return self.a * np.cos(t)
@@ -607,12 +596,8 @@ def _fit_closest(phi, matrix, width, height):
         a = height
         b = width
 
-    ct = matrix[0][0]
-    st = matrix[1][0]
-    angle_rad = np.arctan2(st, ct)
-
-    ang_diff = np.arcsin(np.cross(x_ax_seed, x_ax_fit))
-    ang_rad = angle_rad + ang_diff
+    ang_rad = np.arctan2(matrix[1][0], matrix[0][0])
+    ang_rad += np.arcsin(np.cross(x_ax_seed, x_ax_fit))
     return a, b, ang_rad
 
 
@@ -647,3 +632,24 @@ def _approx_ilin(a, b, x1):
             y_vals.append(y_i(x_ip1))
     circles.append((x_N, 0, R_N))
     return circles
+
+
+def _limits_t(a, b, theta):
+    tan_t = np.tan(theta)
+
+    tan_tx = - b / a * tan_t
+    tx_max = np.arctan(tan_tx)
+    tx_min = np.pi + tx_max
+
+    if np.isclose(tan_t, 0) and np.cos(theta) > 0:
+        ty_max = 0.5 * np.pi
+        ty_min = - 0.5 * np.pi
+    elif np.isclose(tan_t, 0) and np.cos(theta) < 0:
+        ty_max = -0.5 * np.pi
+        ty_min = 0.5 * np.pi
+    else:
+        tan_ty = b / (a * np.tan(theta))
+        ty_max = (np.arctan(tan_ty) + np.pi) % np.pi
+        ty_min = np.pi + ty_max
+
+    return [(tx_min, tx_max), (ty_min, ty_max)]
