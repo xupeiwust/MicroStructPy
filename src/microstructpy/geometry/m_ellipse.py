@@ -635,6 +635,10 @@ def _fit_closest(phi, matrix, width, height):
         a = height
         b = width
 
+    ct = matrix[0][0]
+    st = matrix[1][0]
+    angle_rad = np.arctan2(st, ct)
+
     ang_diff = np.arcsin(np.cross(x_ax_seed, x_ax_fit))
-    ang_rad = self.angle_rad + ang_diff
+    ang_rad = angle_rad + ang_diff
     return a, b, ang_rad
