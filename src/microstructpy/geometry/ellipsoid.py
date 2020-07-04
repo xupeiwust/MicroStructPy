@@ -14,7 +14,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from pyquaternion import Quaternion
 
 from microstructpy import _misc
-from microstructpy.geometry.ellipse import Ellipse
+from microstructpy.geometry.m_ellipse import Ellipse
 
 __author__ = 'Kenneth (Kip) Hart'
 
