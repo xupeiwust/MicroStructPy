@@ -67,77 +67,14 @@ class Ellipse:
                     raise ValueError(kw + ' should be orthonormal.')
 
         # position
-        if 'center' in kwargs:
-            self.center = kwargs['center']
-
-        elif 'position' in kwargs:
-            self.center = kwargs['position']
-
-        else:
-            self.center = (0, 0)
+        cen = kwargs.get('center', (0, 0))
+        cen = kwargs.get('position', cen)
+        self.center = cen
 
         # axes
-        if ('a' in kwargs) and ('b' in kwargs):
-            assert kwargs['a'] > 0
-            assert kwargs['b'] > 0
-
-            self.a = kwargs['a']
-            self.b = kwargs['b']
-
-        elif 'axes' in kwargs:
-            self.a, self.b = kwargs['axes']
-
-        elif ('size' in kwargs) and ('aspect_ratio' in kwargs):
-            assert kwargs['size'] > 0
-            assert kwargs['aspect_ratio'] > 0
-
-            # Derivation for converting (r, k) into (a, b)
-            # Area formula: pi*a*b = pi*r^2
-            # Aspect ratio: k = a/b
-            #
-            # Plug AR into area: k*b^2 = r^2
-            # Solve for b: b = r/sqrt(k)
-            # Solve for a: a = k * b
-
-            r = 0.5 * kwargs['size']
-            k = kwargs['aspect_ratio']
-
-            self.b = r / np.sqrt(k)
-            self.a = k * self.b
-
-        elif ('a' in kwargs) and ('size' in kwargs):
-            assert kwargs['a'] > 0
-            assert kwargs['size'] > 0
-
-            r = 0.5 * kwargs['size']
-
-            self.a = kwargs['a']
-            self.b = (r * r) / self.a
-
-        elif ('b' in kwargs) and ('size' in kwargs):
-            assert kwargs['b'] > 0
-            assert kwargs['size'] > 0
-
-            r = 0.5 * kwargs['size']
-
-            self.b = kwargs['b']
-            self.a = (r * r) / self.b
-        elif ('a' in kwargs) and ('aspect_ratio' in kwargs):
-            assert kwargs['a'] > 0
-            assert kwargs['aspect_ratio'] > 0
-
-            self.a = kwargs['a']
-            self.b = self.a / kwargs['aspect_ratio']
-        elif ('b' in kwargs) and ('aspect_ratio' in kwargs):
-            assert kwargs['b'] > 0
-            assert kwargs['aspect_ratio'] > 0
-
-            self.b = kwargs['b']
-            self.a = self.b * kwargs['aspect_ratio']
-
-        else:
-            self.a = 1
-            self.b = 1
+        shape_keys = ['a', 'b', 'axes', 'size', 'area', 'aspect_ratio']
+        shape_kwargs = {k: kwargs.get(k, None) for k in shape_keys}
+        self.a, self.b = _get_shape(shape_kwargs)
 
         # orientation
         if 'angle_deg' in kwargs:
@@ -642,3 +579,53 @@ class Ellipse:
         if single_pt:
             return mask[0]
         return mask
+
+def _get_shape(shape_kwargs):
+    if 'a' in shape_kwargs and 'b' in shape_kwargs:
+        a = shape_kwargs['a']
+        b = shape_kwargs['b']
+    elif 'axes' in shape_kwargs:
+        a, b = shape_kwargs['axes']
+    elif 'aspect_ratio' in shape_kwargs:
+        a, b = _get_shape_ar(shape_kwargs)
+    elif 'size' in shape_kwargs:
+        r = 0.5 * shape_kwargs['size']
+        a, b = _get_shape_size(r, shape_kwargs)
+    elif 'area' in shape_kwargs:
+        r = np.sqrt(shape_kwargs['area'] / np.pi)
+        a, b = _get_shape_size(r, shape_kwargs)
+    else:
+        a = 1
+        b = 1
+    return a, b
+
+def _get_shape_ar(shape_kwargs):
+    ar = shape_kwargs['aspect_ratio']
+    if 'a' in shape_kwargs:
+        a = shape_kwargs['a']
+        b = a / ar
+    elif 'b' in shape_kwargs:
+        b = shape_kwargs['b']
+        a = ar * b
+    elif 'size' in shape_kwargs:
+        r = 0.5 * shape_kwargs['size']
+        b = r / np.sqrt(ar)
+        a = ar * b
+    elif 'area' in shape_kwargs:
+        r = 0.5 * np.sqrt(shape_kwargs['area'] / np.pi)
+        b = r / np.sqrt(ar)
+        a = ar * b
+    return a, b
+
+
+def _get_shape_size(r, shape_kwargs):
+    if 'a' in shape_kwargs:
+        a = shape_kwargs['a']
+        b = r * r / a
+    elif 'b' in shape_kwargs:
+        b = shape_kwargs['b']
+        a = r * r / b
+    return a, b
+
+
+        
