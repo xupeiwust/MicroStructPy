@@ -109,7 +109,7 @@ class Ellipse:
         yc += pt_cen[1]
 
         # Find pair closest to self
-        a, b, ang_rad = _fit_closest(phi, width, height)
+        a, b, ang_rad = _fit_closest(phi, self.matrix, width, height)
 
         return type(self)(center=(xc, yc), a=a, b=b, angle_rad=ang_rad)
 
@@ -610,12 +610,12 @@ def _get_orientation(kwargs):
     return angle
 
 
-def _fit_closest(phi, width, height):
+def _fit_closest(phi, matrix, width, height):
     s = np.sin(phi)
     c = np.cos(phi)
     rot = np.array([[c, -s], [s, c]])
 
-    x_ax_seed = np.array(self.matrix)[:, 0]
+    x_ax_seed = np.array(matrix)[:, 0]
     x_dot, y_dot = rot.T.dot(x_ax_seed)
 
     if np.abs(x_dot) > np.abs(y_dot):
