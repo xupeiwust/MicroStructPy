@@ -16,6 +16,7 @@ Changed
 Removed
 '''''''
 - Unused tangent sphere function function from ``_misc`` module.
+- Unused ``reflect`` methods from ellipse, ellipsoid, and n-sphere geometries.
 
 `1.3.0`_ - 2020-06-25
 --------------------------
