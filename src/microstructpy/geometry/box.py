@@ -98,7 +98,9 @@ class Box(NBox):
         else:
             ax = plt.gca()
 
-        xlim, ylim, zlim = self.limits
+        xlim = self.limits[0]
+        ylim = self.limits[1]
+        zlim = self.limits[2]
 
         inds = [(0, 0), (0, 1), (1, 1), (1, 0)]
 
