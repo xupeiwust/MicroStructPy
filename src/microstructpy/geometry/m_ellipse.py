@@ -50,21 +50,7 @@ class Ellipse:
     # ----------------------------------------------------------------------- #
     def __init__(self, **kwargs):
         # Check Values
-        for kw in ('a', 'b', 'size', 'aspect_ratio'):
-            if kw in kwargs and kwargs[kw] <= 0:
-                raise ValueError(kw + ' should be positive.')
-        if 'axes' in kwargs:
-            for i, ax in kwargs['axes']:
-                if ax <= 0:
-                    raise ValueError('axes[{}] should be positive'.format(i))
-
-        for kw in ['matrix', 'orientation']:
-            if kw in kwargs:
-                m = np.array(kwargs[kw])
-                if m.shape != (2, 2):
-                    raise ValueError(kw + ' should be 2x2.')
-                if not np.all(np.isclose(m * m.T, np.eye(2))):
-                    raise ValueError(kw + ' should be orthonormal.')
+        _check_kwargs(kwargs)
 
         # position
         cen = kwargs.get('center', (0, 0))
@@ -77,27 +63,9 @@ class Ellipse:
         self.a, self.b = _get_shape(shape_kwargs)
 
         # orientation
-        if 'angle_deg' in kwargs:
-            self.angle = kwargs['angle_deg']
-
-        elif 'angle_rad' in kwargs:
-            self.angle = 180 * kwargs['angle_rad'] / np.pi
-
-        elif 'angle' in kwargs:
-            self.angle = kwargs['angle']
-
-        elif 'matrix' in kwargs:
-            ct = kwargs['matrix'][0][0]
-            st = kwargs['matrix'][1][0]
-            self.angle = 180 * np.arctan2(st, ct) / np.pi
-
-        elif 'orientation' in kwargs:
-            ct = kwargs['orientation'][0][0]
-            st = kwargs['orientation'][1][0]
-            self.angle = 180 * np.arctan2(st, ct) / np.pi
-
-        else:
-            self.angle = 0
+        ori_keys = ['angle_deg', 'angle', 'angle_rad', 'matrix', 'orientation']
+        ori_kwargs = {k: kwargs.get(k, None) for k in ori_keys}
+        self.angle = _get_orientation(ori_kwargs)
 
     # ----------------------------------------------------------------------- #
     # Best Fit Function                                                       #
@@ -580,6 +548,25 @@ class Ellipse:
             return mask[0]
         return mask
 
+
+def _check_kwargs(kwargs):
+    for kw in ('a', 'b', 'size', 'aspect_ratio'):
+        if kw in kwargs and kwargs[kw] <= 0:
+            raise ValueError(kw + ' should be positive.')
+    if 'axes' in kwargs:
+        for i, ax in kwargs['axes']:
+            if ax <= 0:
+                raise ValueError('axes[{}] should be positive'.format(i))
+
+    for kw in ['matrix', 'orientation']:
+        if kw in kwargs:
+            m = np.array(kwargs[kw])
+            if m.shape != (2, 2):
+                raise ValueError(kw + ' should be 2x2.')
+            if not np.all(np.isclose(m * m.T, np.eye(2))):
+                raise ValueError(kw + ' should be orthonormal.')
+
+
 def _get_shape(shape_kwargs):
     if 'a' in shape_kwargs and 'b' in shape_kwargs:
         a = shape_kwargs['a']
@@ -628,4 +615,21 @@ def _get_shape_size(r, shape_kwargs):
     return a, b
 
 
-        
+def _get_orientation(kwargs):
+    if 'angle_deg' in kwargs:
+        angle = kwargs['angle_deg']
+    elif 'angle_rad' in kwargs:
+        angle = 180 * kwargs['angle_rad'] / np.pi
+    elif 'angle' in kwargs:
+        angle = kwargs['angle']
+    elif 'matrix' in kwargs:
+        ct = kwargs['matrix'][0][0]
+        st = kwargs['matrix'][1][0]
+        angle = 180 * np.arctan2(st, ct) / np.pi
+    elif 'orientation' in kwargs:
+        ct = kwargs['orientation'][0][0]
+        st = kwargs['orientation'][1][0]
+        angle = 180 * np.arctan2(st, ct) / np.pi
+    else:
+        angle = 0
+    return angle
