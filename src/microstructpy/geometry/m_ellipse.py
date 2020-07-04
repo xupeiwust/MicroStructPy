@@ -367,16 +367,15 @@ class Ellipse(object):
         if 'size' in kwargs:
             s_dist = kwargs['size']
 
-            if type(s_dist) in (float, int):
+            if isinstance(s_dist, (float, int)):
                 return 0.25 * np.pi * s_dist * s_dist
-            else:
-                return 0.25 * np.pi * s_dist.moment(2)
+            return 0.25 * np.pi * s_dist.moment(2)
 
         elif ('a' in kwargs) and ('b' in kwargs):
             exp = np.pi
             for kw in ('a', 'b'):
                 dist = kwargs[kw]
-                if type(dist) in (float, int):
+                if isinstance(dist, (float, int)):
                     mu = dist
                 else:
                     mu = dist.moment(1)
@@ -641,8 +640,7 @@ class Ellipse(object):
         mask = sq_dist <= 1
         if single_pt:
             return mask[0]
-        else:
-            return mask
+        return mask
 
     # ----------------------------------------------------------------------- #
     # Reflect                                                                 #
@@ -684,5 +682,4 @@ class Ellipse(object):
 
         if single_pt:
             return new_pos[0]
-        else:
-            return new_pos
+        return new_pos
