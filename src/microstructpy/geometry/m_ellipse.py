@@ -1,3 +1,4 @@
+"""Module for Ellipse class."""
 # --------------------------------------------------------------------------- #
 #                                                                             #
 # Import Modules                                                              #
@@ -18,7 +19,7 @@ __author__ = 'Kenneth (Kip) Hart'
 # Ellipse Class                                                               #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-class Ellipse(object):
+class Ellipse:
     r"""A 2-D ellipse geometry.
 
     This class contains a 2-D ellipse. It is defined by a center point, axes
