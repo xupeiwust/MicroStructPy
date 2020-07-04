@@ -8,6 +8,10 @@ and this project adheres to `Semantic Versioning`_.
 
 `Unreleased`_
 --------------------------
+Added
+'''''
+- VTK output for seed lists and polyhedral meshes.
+
 Changed
 '''''''
 - Renamed ``geometry.ellipse`` module to avoid conflict with

@@ -145,7 +145,7 @@ jobs:
         flake8 src tests setup.py --exclude=__init__.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Lint with isort
       run: |
-        isort --verbose --check-only --diff --recursive src tests setup.py
+        isort --verbose --check-only --diff src tests setup.py
     - name: Lint with GitHub Super-Linter
       uses: docker://github/super-linter
 

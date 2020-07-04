@@ -1,7 +1,7 @@
 """Standard Voronoi diagram example."""
 import os
 
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 
 import microstructpy as msp
 
