@@ -112,7 +112,7 @@ class Sphere(NSphere):
         r_dist = kwargs.get('r', None)
         r_dist = kwargs.get('radius', r_dist)
 
-        if isinstance(r_dist, float) or isinstance(r_dist, int):
+        if isinstance(r_dist, (float, int)):
             return 4 * np.pi * r_dist * r_dist * r_dist / 3
         if r_dist is not None:
             return 4 * np.pi * r_dist.moment(3) / 3
@@ -124,9 +124,9 @@ class Sphere(NSphere):
                 d_dist = kwargs[d_kw]
                 break
 
-        if isinstance(d_dist, float) or isinstance(d_dist, int):
+        if isinstance(d_dist, (float, int)):
             return 0.5 * np.pi * d_dist * d_dist * d_dist / 3
-        elif d_dist is not None:
+        if d_dist is not None:
             return 0.5 * np.pi * d_dist.moment(3) / 3
 
         if 'volume' in kwargs:
@@ -162,14 +162,7 @@ class Sphere(NSphere):
         else:
             ax = plt.gca()
 
-        xp, yp, zp = _primitive_pts()
-
-        xc, yc, zc = self.center
-        r = self.r
-
-        xx = xc + r * xp
-        yy = yc + r * yp
-        zz = zc + r * zp
+        xx, yy, zz = _plot_pts(self.r, self.center)
 
         mod_kwargs = {}
         for key, val in kwargs.items():
@@ -180,13 +173,13 @@ class Sphere(NSphere):
         ax.plot_surface(xx, yy, zz, **mod_kwargs)
 
 
-def _primitive_pts(n_pts=12):
+def _plot_pts(r=1, center=[0, 0, 0], n_pts=12):
     u = np.linspace(0, 2 * np.pi, n_pts-1)
     cv = np.linspace(-1, 1, n_pts)
     uu, cvv = np.meshgrid(u, cv)
     svv = np.sin(np.arccos(cvv))
 
-    xx = np.cos(uu) * svv
-    yy = np.sin(uu) * svv
-    zz = cvv
+    xx = center[0] + r * np.cos(uu) * svv
+    yy = center[1] + r * np.sin(uu) * svv
+    zz = center[2] + r * cvv
     return xx, yy, zz

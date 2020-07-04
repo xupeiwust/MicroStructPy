@@ -30,8 +30,7 @@ def create_welcome():
     _, axes = plt.subplots(2, 3, figsize=(21, 15))
     plt.subplots_adjust(wspace=0.05, hspace=0)
     for i, fname in enumerate(welcome_fnames):
-        filename = os.path.join(example_dir, fname)
-        im = plt.imread(filename)
+        im = plt.imread(os.path.join(example_dir, fname))
 
         row_num = int(i / 3)
         col_num = i % 3
@@ -55,8 +54,7 @@ def seed_poly_tri(filepath):
     _, axes = plt.subplots(1, 3, figsize=(20, 10))
     plt.subplots_adjust(wspace=0.05, hspace=0)
     for i, fname in enumerate(basenames):
-        filename = os.path.join(ex_path, fname)
-        im = plt.imread(filename)
+        im = plt.imread(os.path.join(ex_path, fname))
 
         ax = axes[i]
         ax.imshow(im)

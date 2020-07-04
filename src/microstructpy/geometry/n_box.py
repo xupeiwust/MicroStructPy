@@ -20,7 +20,7 @@ __author__ = 'Kenneth (Kip) Hart'
 # NBox Class                                                                  #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-class NBox(object):
+class NBox:
     """N-dimensional box
 
     This class contains a generic, n-dimensinoal box.
@@ -36,12 +36,10 @@ class NBox(object):
     """
 
     def __init__(self, **kwargs):
-        if 'bounds' in kwargs:
-            lims = kwargs['bounds']
-        elif 'limits' in kwargs:
-            lims = kwargs['limits']
+        lims = kwargs.get('bounds', None)
+        lims = kwargs.get('limits', lims)
 
-        if ('bounds' in kwargs) or ('limits' in kwargs):
+        if lims is not None:
             self.center = [0.5 * (lb + ub) for lb, ub in lims]
             self.side_lengths = [ub - lb for lb, ub in lims]
 
@@ -191,5 +189,4 @@ class NBox(object):
         mask = np.all(np.abs(rel_pos) <= min_dist, axis=-1)
         if single_pt:
             return mask[0]
-        else:
-            return mask
+        return mask

@@ -1,3 +1,4 @@
+"""Module for Circle class."""
 # --------------------------------------------------------------------------- #
 #                                                                             #
 # Import Modules                                                              #
@@ -117,11 +118,8 @@ class Circle(NSphere):
 
         """  # NOQA: E501
         # Check for radius distribution
-        r_dist = None
-        if 'radius' in kwargs:
-            r_dist = kwargs['radius']
-        elif 'r' in kwargs:
-            r_dist = kwargs['r']
+        r_dist = kwargs.get('r', None)
+        r_dist = kwargs.get('radius', r_dist)
 
         try:
             return np.pi * r_dist.moment(2)
