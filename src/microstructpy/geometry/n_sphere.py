@@ -1,3 +1,4 @@
+"""Module for the NSphere class."""
 # --------------------------------------------------------------------------- #
 #                                                                             #
 # Import Modules                                                              #
@@ -15,7 +16,7 @@ __author__ = 'Kenneth (Kip) Hart'
 # NSphere Class                                                               #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-class NSphere(object):
+class NSphere:
     """An N-dimensional sphere.
 
     This class represents a generic, n-dimensional sphere. It is defined by
@@ -82,8 +83,7 @@ class NSphere(object):
         n_pts, n_dim = pts.shape
         if n_pts <= n_dim:
             mid = pts.mean(axis=0)
-            rel_pos = pts - mid
-            dist = np.linalg.norm(rel_pos, axis=1).mean()
+            dist = np.linalg.norm(pts - mid, axis=1).mean()
             return cls(center=mid, radius=dist)
 
         # translate points to average position
@@ -108,11 +108,10 @@ class NSphere(object):
         cen = cen_b + bcenter
 
         # Calculate the radius
-        alpha = np.sum(cen_b * cen_b) + np.trace(mat) / n_pts
-        R = np.sqrt(alpha)
+        r = np.sqrt(np.sum(cen_b * cen_b) + np.trace(mat) / n_pts)
 
         # Create the instance
-        return cls(center=cen, radius=R)
+        return cls(center=cen, radius=r)
 
     # ----------------------------------------------------------------------- #
     # String and Representation Functions                                     #
@@ -250,8 +249,7 @@ class NSphere(object):
         mask = sq_dist <= self.r * self.r
         if single_pt:
             return mask[0]
-        else:
-            return mask
+        return mask
 
     # ----------------------------------------------------------------------- #
     # Reflect                                                                 #
@@ -288,5 +286,4 @@ class NSphere(object):
         new_pts = new_rel_pos + np.array(self.center)
         if single_pt:
             return new_pts[0]
-        else:
-            return new_pts
+        return new_pts

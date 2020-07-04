@@ -29,7 +29,7 @@ __author__ = 'Kenneth (Kip) Hart'
 # Seed Class                                                                  #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-class Seed(object):
+class Seed:
     """Seed particle
 
     The Seed class contains the information about a single seed in the mesh.
@@ -118,7 +118,7 @@ class Seed(object):
         Returns:
             Seed: An instance of the class.
         """
-        assert type(seed_type) is str
+        assert isinstance(seed_type, str)
         seed_type = seed_type.strip().lower()
 
         if seed_type == 'nonetype':
@@ -247,8 +247,7 @@ class Seed(object):
 
         if v_self == v_seed:
             return self.phase < seed.phase
-        else:
-            return v_self < v_seed
+        return v_self < v_seed
 
     def __eq__(self, seed):
         if not isinstance(seed, Seed):
@@ -320,8 +319,7 @@ class Seed(object):
             return 0
         if self.geometry.n_dim == 2:
             return self.geometry.area
-        else:
-            return self.geometry.volume
+        return self.geometry.volume
 
     # ----------------------------------------------------------------------- #
     # Limits                                                                  #
@@ -373,5 +371,5 @@ class Seed(object):
             plt.gca().add_collection(coll)
 
         else:
-            [geometry.Sphere(r=r, center=(x, y, z)).plot(**kwargs)
-             for x, y, z, r in self.breakdown]
+            for x, y, z, r  in  self.breakdown:
+                geometry.Sphere(r=r, center=(x, y, z)).plot(**kwargs)

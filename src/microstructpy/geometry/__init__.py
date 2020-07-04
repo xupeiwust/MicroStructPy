@@ -1,3 +1,4 @@
+"""Geometry module."""
 from microstructpy.geometry.box import Box
 from microstructpy.geometry.box import Cube
 from microstructpy.geometry.circle import Circle
@@ -23,28 +24,30 @@ def factory(name, **kwargs):
         has dropped the first parameter.
 
     Args:
-        name (str): {'box' | 'cube' | 'ellipse' | 'ellipsoid' | 'circle' | 
+        name (str): {'box' | 'cube' | 'ellipse' | 'ellipsoid' | 'circle' |
             'rectangle' | 'square' | 'sphere'} Name of geometry.
         **kwargs (dict): Arguments defining the geometry.
 
     """
     geom = name.strip().lower()
+    value = None
     if geom in ('box', 'rectangular prism', 'cuboid'):
-        return Box(**kwargs)
+        value = Box(**kwargs)
     elif geom == 'cube':
-        return Cube(**kwargs)
+        value = Cube(**kwargs)
     elif geom == 'ellipse':
-        return Ellipse(**kwargs)
+        value = Ellipse(**kwargs)
     elif geom == 'ellipsoid':
-        return Ellipsoid(**kwargs)
+        value = Ellipsoid(**kwargs)
     elif geom == 'circle':
-        return Circle(**kwargs)
+        value = Circle(**kwargs)
     elif geom == 'rectangle':
-        return Rectangle(**kwargs)
+        value = Rectangle(**kwargs)
     elif geom == 'square':
-        return Square(**kwargs)
+        value = Square(**kwargs)
     elif geom == 'sphere':
-        return Sphere(**kwargs)
+        value = Sphere(**kwargs)
     else:
         e_str = 'Cannot recognize geometry name: ' + geom
         raise ValueError(e_str)
+    return value

@@ -84,12 +84,12 @@ if __name__ == '__main__':
 
     # Run Python Scripts
     py_pattern = os.path.join(example_dir, '*.py')
-    for filename in glob.glob(py_pattern):
-        subprocess.call(['python', filename])
+    for script_filename in glob.glob(py_pattern):
+        subprocess.call(['python', script_filename])
 
     # Remove Supporting Files
-    for fname in supporting_files:
-        os.remove(fname)
+    for support_filename in supporting_files:
+        os.remove(support_filename)
 
     # Create welcome figure
     create_welcome()

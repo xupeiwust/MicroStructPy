@@ -98,7 +98,8 @@ class Sphere(NSphere):
 
             \mathbb{E}[V] &= \mathbb{E}[\frac{4}{3}\pi R^3] \\
                             &= \frac{4}{3}\pi \mathbb{E}[R^3] \\
-                            &= \frac{4}{3}\pi (\mu_R^3 + 3 \mu_R \sigma_R^2 + \gamma_{1, R} \sigma_R^3)
+                            &= \frac{4}{3}\pi (\mu_R^3 + 3 \mu_R \sigma_R^2 +
+                               \gamma_{1, R} \sigma_R^3)
 
         Args:
             **kwargs: Keyword arguments, see :class:`microstructpy.geometry.Sphere`.
@@ -108,15 +109,12 @@ class Sphere(NSphere):
 
         """  # NOQA: E501
         # Check for radius distribution
-        r_dist = None
-        if 'radius' in kwargs:
-            r_dist = kwargs['radius']
-        elif 'r' in kwargs:
-            r_dist = kwargs['r']
+        r_dist = kwargs.get('r', None)
+        r_dist = kwargs.get('radius', r_dist)
 
-        if type(r_dist) in (float, int):
+        if isinstance(r_dist, float) or isinstance(r_dist, int):
             return 4 * np.pi * r_dist * r_dist * r_dist / 3
-        elif r_dist is not None:
+        if r_dist is not None:
             return 4 * np.pi * r_dist.moment(3) / 3
 
         # Check for diameter distribution
@@ -126,7 +124,7 @@ class Sphere(NSphere):
                 d_dist = kwargs[d_kw]
                 break
 
-        if type(d_dist) in (float, int):
+        if isinstance(d_dist, float) or isinstance(d_dist, int):
             return 0.5 * np.pi * d_dist * d_dist * d_dist / 3
         elif d_dist is not None:
             return 0.5 * np.pi * d_dist.moment(3) / 3
@@ -164,17 +162,14 @@ class Sphere(NSphere):
         else:
             ax = plt.gca()
 
-        u = np.linspace(0, 2 * np.pi, 11)
-        cv = np.linspace(-1, 1, 12)
-        uu, cvv = np.meshgrid(u, cv)
-        svv = np.sin(np.arccos(cvv))
+        xp, yp, zp = _primitive_pts()
 
         xc, yc, zc = self.center
         r = self.r
 
-        xx = xc + r * np.cos(uu) * svv
-        yy = yc + r * np.sin(uu) * svv
-        zz = zc + r * cvv
+        xx = xc + r * xp
+        yy = yc + r * yp
+        zz = zc + r * zp
 
         mod_kwargs = {}
         for key, val in kwargs.items():
@@ -183,3 +178,15 @@ class Sphere(NSphere):
             else:
                 mod_kwargs[key] = val
         ax.plot_surface(xx, yy, zz, **mod_kwargs)
+
+
+def _primitive_pts(n_pts=12):
+    u = np.linspace(0, 2 * np.pi, n_pts-1)
+    cv = np.linspace(-1, 1, n_pts)
+    uu, cvv = np.meshgrid(u, cv)
+    svv = np.sin(np.arccos(cvv))
+
+    xx = np.cos(uu) * svv
+    yy = np.sin(uu) * svv
+    zz = cvv
+    return xx, yy, zz
