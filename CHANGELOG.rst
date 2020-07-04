@@ -6,6 +6,17 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_
+--------------------------
+Changed
+'''''''
+- Renamed ``geometry.ellipse`` module to avoid conflict with
+  ``lsq-ellipse`` module.
+
+Removed
+'''''''
+- Unused tangent sphere function function from ``_misc`` module.
+
 `1.3.0`_ - 2020-06-25
 --------------------------
 Added
