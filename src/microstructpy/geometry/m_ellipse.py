@@ -384,35 +384,7 @@ class Ellipse:
         a_str += ' semi-major axis, a=' + str(a)
         assert x1 < a, a_str
 
-        R_N = b * b / a  # Eq. 8
-        x_N = a - R_N  # Eq 9
-
-        def R_i(x):
-            return b * np.sqrt(1 - x * x / (a * a - b * b))  # Eq. 6
-
-        def y_i(x):
-            ratio = x / a
-            return b * np.sqrt(1 - ratio * ratio)  # Eq. 1
-
-        circles = [(0, 0, b)]
-        y_vals = [b]
-
-        adding_circles = x1 < x_N
-        if adding_circles:
-            circles.append((x1, 0, R_i(x1)))
-            y_vals.append(y_i(x1))
-
-        while adding_circles:
-            y_ratio = y_vals[-1] / y_vals[-2]
-            x_diff = circles[-1][0] - circles[-2][0]
-            x_ip1 = y_ratio * x_diff + circles[-1][0]  # Eq. 7
-
-            adding_circles = x_ip1 < x_N
-            if adding_circles:
-                circle = (x_ip1, 0, R_i(x_ip1))
-                circles.append(circle)
-                y_vals.append(y_i(x_ip1))
-        circles.append((x_N, 0, R_N))
+        circles = _approx_ilin(a, b, x1)
         reflect = [(-x, y, r) for x, y, r in circles[1:]]
 
         all_circles = np.array(circles + reflect)
@@ -642,3 +614,36 @@ def _fit_closest(phi, matrix, width, height):
     ang_diff = np.arcsin(np.cross(x_ax_seed, x_ax_fit))
     ang_rad = angle_rad + ang_diff
     return a, b, ang_rad
+
+
+def _approx_ilin(a, b, x1):
+    R_N = b * b / a  # Eq. 8
+    x_N = a - R_N  # Eq 9
+
+    def R_i(x):
+        return b * np.sqrt(1 - x * x / (a * a - b * b))  # Eq. 6
+
+    def y_i(x):
+        ratio = x / a
+        return b * np.sqrt(1 - ratio * ratio)  # Eq. 1
+
+    circles = [(0, 0, b)]
+    y_vals = [b]
+
+    adding_circles = x1 < x_N
+    if adding_circles:
+        circles.append((x1, 0, R_i(x1)))
+        y_vals.append(y_i(x1))
+
+    while adding_circles:
+        y_ratio = y_vals[-1] / y_vals[-2]
+        x_diff = circles[-1][0] - circles[-2][0]
+        x_ip1 = y_ratio * x_diff + circles[-1][0]  # Eq. 7
+
+        adding_circles = x_ip1 < x_N
+        if adding_circles:
+            circle = (x_ip1, 0, R_i(x_ip1))
+            circles.append(circle)
+            y_vals.append(y_i(x_ip1))
+    circles.append((x_N, 0, R_N))
+    return circles
