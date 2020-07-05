@@ -4,6 +4,8 @@ This private module contains miscellaneous functions.
 
 """
 
+import  numpy as np
+
 __author__ = 'Kenneth (Kip) Hart'
 
 kw_solid = {'crystalline', 'granular', 'solid'}
