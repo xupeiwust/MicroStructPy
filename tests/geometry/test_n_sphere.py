@@ -7,6 +7,7 @@ c3 = msp.geometry.n_sphere.NSphere(d=4, center=(3, 1))
 
 
 def test_eq():
+    """Test NSphere equals methd."""
     assert c1.__eq__(c1)
     assert not c2 == c1
 

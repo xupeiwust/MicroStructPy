@@ -37,7 +37,7 @@ __author__ = 'Kenneth (Kip) Hart'
 # SeedList Class                                                              #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-class SeedList(object):
+class SeedList:
     """List of seed geometries.
 
     The SeedList is similar to a standard Python list, but contains instances
@@ -46,14 +46,18 @@ class SeedList(object):
     of a cache text file.
 
     Args:
-        seeds (list): *(optional)* List of :class:`.Seed` instances.
+        seeds (list): *(optional)* List of :class:`.Seed` instances. Default
+            is None, which is creates an empty list.
 
     """
     # ----------------------------------------------------------------------- #
     # Constructors                                                            #
     # ----------------------------------------------------------------------- #
-    def __init__(self, seeds=[]):
-        self.seeds = seeds
+    def __init__(self, seeds=None):
+        if seeds is None:
+            self.seeds = []
+        else:
+            self.seeds = seeds
 
     @classmethod
     def from_file(cls, filename):
@@ -79,7 +83,7 @@ class SeedList(object):
         return cls([_seed.Seed.from_str(beg + s) for s in rem])
 
     @classmethod
-    def from_info(cls, phases, volume, rng_seeds={}):
+    def from_info(cls, phases, volume, rng_seeds=None):
         """Create seed list from microstructure information
 
         This function creates a seed list from information about the
@@ -117,11 +121,15 @@ class SeedList(object):
                         'angle': 3,
                     }
 
+                Default is None, which initializes all RNG seeds to 0.
+
         Returns:
             SeedList: An instance of the class containing seeds prescribed by
             the phase information and filling the given volume.
 
         """
+        if rng_seeds is None:
+            rng_seeds = {}
 
         # determine dimensionality, set default shape
         default_shapes = {2: 'circle', 3: 'sphere'}
@@ -295,10 +303,9 @@ class SeedList(object):
 
         .. versionadded:: 1.1
         """
-        if type(self) == type(seedlist):
+        if isinstance(seedlist, SeedList):
             return SeedList(self.seeds + seedlist.seeds)
-        else:
-            return SeedList(self.seeds + seedlist)
+        return SeedList(self.seeds + seedlist)
 
     def __len__(self):
         return len(self.seeds)
@@ -406,7 +413,7 @@ class SeedList(object):
     # ----------------------------------------------------------------------- #
     # Plot Function                                                           #
     # ----------------------------------------------------------------------- #
-    def plot(self, index_by='seed', material=[], loc=0, **kwargs):
+    def plot(self, index_by='seed', material=None, loc=0, **kwargs):
         """Plot the seeds in the seed list.
 
         This function plots the seeds contained in the seed list.
@@ -437,6 +444,8 @@ class SeedList(object):
             **kwargs: Keyword arguments to pass to matplotlib
 
         """
+        if material is None:
+            material = []
         seed_args = [{} for seed in self]
         for seed_num, seed in enumerate(self):
             phase_num = seed.phase
@@ -588,7 +597,7 @@ class SeedList(object):
         if material:
             p_kwargs = [{'label': m} for m in material]
             if index_by == 'seed':
-                for seed_kwargs, seed in zip(seed_args,  self):
+                for seed_kwargs, seed in zip(seed_args, self):
                     p = seed.phase
                     p_kwargs[p].update(seed_kwargs)
             else:
@@ -597,8 +606,8 @@ class SeedList(object):
                         for i, elem in enumerate(val):
                             p_kwargs[i][key] = elem
                     else:
-                        for i in range(len(p_kwargs)):
-                            p_kwargs[i][key] = val
+                        for p_kwargs_i in p_kwargs:
+                            p_kwargs_i[key] = val
 
             # Replace plural keywords
             for p_kw in p_kwargs:
@@ -725,7 +734,7 @@ class SeedList(object):
         if material:
             p_kwargs = [{'label': m} for m in material]
             if index_by == 'seed':
-                for seed_kwargs, seed in zip(seed_args,  self):
+                for seed_kwargs, seed in zip(seed_args, self):
                     p = seed.phase
                     p_kwargs[p].update(seed_kwargs)
             else:
@@ -885,7 +894,7 @@ class SeedList(object):
             searching = True
             n_attempts = 0
             i_sample = 0
-            pts = sample_pos_within(pos_dist, n_samples, domain)
+            pts = _sample_pos_within(pos_dist, n_samples, domain)
             while searching and n_attempts < max_attempts:
                 pt = pts[i_sample]
 
@@ -894,7 +903,7 @@ class SeedList(object):
                 i_sample += 1
 
                 if i_sample == n_samples:
-                    pts = sample_pos_within(pos_dist, n_samples, domain)
+                    pts = _sample_pos_within(pos_dist, n_samples, domain)
                     i_sample = 0
 
                 bkdwn = np.array(seed.breakdown)
@@ -993,11 +1002,10 @@ def sample_pos(distribution, n=1):
 
     if n == 1:
         return pos[0]
-    else:
-        return pos
+    return pos
 
 
-def sample_pos_within(distribution, n, domain):
+def _sample_pos_within(distribution, n, domain):
     pos = []
     while len(pos) < n:
         samples = sample_pos(distribution, n)
