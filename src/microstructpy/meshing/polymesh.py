@@ -897,7 +897,7 @@ class PolyMesh:
                             p = s2p[s]
                             p_kwargs[p][key] = v
                 else:
-                    for i, m in enumerate(material):
+                    for i, _ in enumerate(material):
                         p_kwargs[i][key] = value
 
             # Replace plural keywords
