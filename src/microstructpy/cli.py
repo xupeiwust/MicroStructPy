@@ -625,12 +625,11 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
     ax = fig.gca(projection={2: None, 3: Axes3D.name}[n_dim], label='seeds')
 
     if not plot_axes:
-        if n_dim == 2:
-            ax.set_axis_off()
-            ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
-        else:
-            ax._axis3don = False
+        ax.set_axis_off()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        if n_dim == 3:
+            ax.get_zaxis().set_visible(False)
 
     # Plot seeds
     edge_kwargs.setdefault('edgecolors', {2: 'k', 3: 'none'}[n_dim])
@@ -745,12 +744,11 @@ def plot_poly(pmesh, phases, plot_files=['polymesh.png'], plot_axes=True,
     ax = fig.gca(projection={2: None, 3: Axes3D.name}[n_dim], label='poly')
 
     if not plot_axes:
-        if n_dim == 2:
-            ax.set_axis_off()
-            ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
-        else:
-            ax._axis3don = False
+        ax.set_axis_off()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        if n_dim == 3:
+            ax.get_zaxis().set_visible(False)
 
     # Plot polygons
     fcs = _poly_colors(pmesh, phases, color_by, colormap, n_dim)
@@ -879,18 +877,16 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
     ax = fig.gca(projection={2: None, 3: Axes3D.name}[n_dim], label='tri')
 
     if not plot_axes:
-        if n_dim == 2:
-            ax.set_axis_off()
-            ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
-        else:
-            ax._axis3don = False
+        ax.set_axis_off()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+        if n_dim == 3:
+            ax.get_zaxis().set_visible(False)
 
     # Determine which facets are visible
     vis_regions = set()
     invis_regions = set(range(-6, 0))
-    f_front = set([i for i, fn in enumerate(pmesh.facet_neighbors)
-                   if min(fn) < 0])
+    f_front = {i for i, fn in enumerate(pmesh.facet_neighbors) if min(fn) < 0}
     while f_front:
         new_front = set()
         for f in f_front:
@@ -1021,7 +1017,7 @@ def dict_convert(dictionary, filepath='.'):
     new_dict = collections.OrderedDict()
     for key in dictionary:
         val = dictionary[key]
-        if isinstance(val, (dict, collections.OrderedDict))
+        if isinstance(val, (dict, collections.OrderedDict)):
             new_val = dict_convert(val, filepath)
 
             # Exception for scipy.stats distributions
@@ -1070,14 +1066,13 @@ def _dist_convert(dist_dict):
         bin_cnts = [cdf[i + 1][1] - cdf[i][1] for i in range(len(cdf) - 1)]
         return scipy.stats.rv_histogram(tuple([bin_cnts, bin_bnds]))
 
-    elif dist_type == 'histogram':
+    if dist_type == 'histogram':
         hist_filename = params['filename']
         with open(hist_filename, 'r') as file:
             hist = [[float(s) for s in line.split(',')] for line in file]
         return scipy.stats.rv_histogram(tuple(hist))
 
-    else:
-        return scipy.stats.__dict__[dist_type](**params)
+    return scipy.stats.__dict__[dist_type](**params)
 
 
 if __name__ == '__main__':
