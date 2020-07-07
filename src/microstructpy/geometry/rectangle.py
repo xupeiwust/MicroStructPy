@@ -382,30 +382,15 @@ def _axis_aligned_best_fit(pts):
     dists = np.array([x1_dist, x2_dist, y1_dist, y2_dist]).T
     min_dist = dists.min(axis=1)
 
-    mask_x1 = np.isclose(x1_dist, min_dist)
-    mask_x2 = np.isclose(x2_dist, min_dist)
-    mask_y1 = np.isclose(y1_dist, min_dist)
-    mask_y2 = np.isclose(y2_dist, min_dist)
+    masks = [np.isclose(d, min_dist) for d in dists.T]
+    fits = [np.mean(pts[m, i //  2].T) for i, m in enumerate(masks)]
 
-    # Group points by edge
-    x_x1 = pts[mask_x1, 0].T
-    y_y1 = pts[mask_y1, 1].T
-    x_x2 = pts[mask_x2, 0].T
-    y_y2 = pts[mask_y2, 1].T
+    xc = 0.5 * (fits[0] + fits[1])
+    yc = 0.5 * (fits[2] + fits[3])
+    x_len = fits[1] - fits[0]
+    y_len = fits[3] - fits[2]
 
-    # Get lines of best fit for each edge
-    x1_fit = np.mean(x_x1)
-    y1_fit = np.mean(y_y1)
-    x2_fit = np.mean(x_x2)
-    y2_fit = np.mean(y_y2)
-
-    x_cen = 0.5 * (x1_fit + x2_fit)
-    y_cen = 0.5 * (y1_fit + y2_fit)
-    fit_cen_bb = np.array([x_cen, y_cen])
-    x_len = x2_fit - x1_fit
-    y_len = y2_fit - y1_fit
-
-    return Rectangle(center=fit_cen_bb, length=x_len, width=y_len)
+    return Rectangle(center=[xc, yc], length=x_len, width=y_len)
 
 
 # --------------------------------------------------------------------------- #
