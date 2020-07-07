@@ -666,12 +666,13 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
 def _seed_colors(seeds, phases, color_by='material', colormap='viridis'):
     if color_by == 'material':
         return [_phase_color(s.phase, phases) for s in seeds]
-    elif color_by == 'seed number':
+    if color_by == 'seed number':
         n = len(seeds)
         return [_cm_color(i / (n - 1), colormap) for i in range(n)]
-    elif color_by == 'material number':
+    if color_by == 'material number':
         n = len(phases)
         return [_cm_color(s.phase / (n - 1), colormap) for s in seeds]
+    raise ValueError('unknown color_by setting ' + str(color_by))
 
 
 def _phase_color(i, phases):
@@ -681,9 +682,10 @@ def _phase_color(i, phases):
 def _phase_color_by(i, phases, color_by='material', colormap='viridis'):
     if color_by == 'material':
         return phases[i].get('color', 'C' + str(i % 10))
-    elif color_by == 'material number':
+    if color_by == 'material number':
         n = len(phases)
         return _cm_color(i / (n - 1), colormap)
+    raise ValueError('unknown color_by setting ' + str(color_by))
 
 
 def _cm_color(f, colormap='viridis'):
@@ -803,23 +805,23 @@ def _poly_colors(pmesh, phases, color_by, colormap, n_dim):
         for seed_num, r_c in zip(pmesh.seed_numbers, r_colors):
             s_colors[seed_num] = r_c
         return s_colors
-    else:
-        s2p = {s: p for s, p in zip(pmesh.seed_numbers, pmesh.phase_numbers)}
-        n = max(s2p.keys()) + 1
-        colors = []
-        for s in range(n):
-            if color_by == 'material':
-                phase_num = s2p[s]
-                color = _phase_color(phase_num, phases)
-            elif color_by == 'seed number':
-                color = _cm_color(s / (n - 1), colormap)
-            elif color_by == 'material number':
-                n_phases = len(phases)
-                color = _cm_color(s2p[s] / (n_phases - 1), colormap)
-            else:
-                color = 'none'
-            colors.append(color)
-        return colors
+
+    s2p = {s: p for s, p in zip(pmesh.seed_numbers, pmesh.phase_numbers)}
+    n = max(s2p.keys()) + 1
+    colors = []
+    for s in range(n):
+        if color_by == 'material':
+            phase_num = s2p[s]
+            color = _phase_color(phase_num, phases)
+        elif color_by == 'seed number':
+            color = _cm_color(s / (n - 1), colormap)
+        elif color_by == 'material number':
+            n_phases = len(phases)
+            color = _cm_color(s2p[s] / (n_phases - 1), colormap)
+        else:
+            color = 'none'
+        colors.append(color)
+    return colors
 
 
 # --------------------------------------------------------------------------- #
