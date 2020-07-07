@@ -376,8 +376,7 @@ class Rectangle(NBox):
 
         # Rotate and translate circles
         pts = circs[:, :-1]
-        circs[:, :-1] = pts.dot(np.array(self.matrix).T)
-        circs[:, :-1] += self.center
+        circs[:, :-1] = pts.dot(np.array(self.matrix).T) + self.center
         return circs
 
     # ----------------------------------------------------------------------- #
