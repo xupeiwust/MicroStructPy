@@ -484,7 +484,7 @@ class SeedList:
             ellipse_data = {'w': [], 'h': [], 'a': [], 'xy': []}
             ec_kwargs = {}
 
-            rect_data = {'xy': [], 'w': [], 'h': [], 'angle': []}
+            rect_data = []
             rect_kwargs = {}
 
             pc_verts = []
@@ -524,11 +524,9 @@ class SeedList:
                     w, h = seed.geometry.side_lengths
                     corner = seed.geometry.corner
                     t = seed.geometry.angle_deg
-
-                    rect_data['w'].append(w)
-                    rect_data['h'].append(h)
-                    rect_data['angle'].append(t)
-                    rect_data['xy'].append(corner)
+                    rect_inputs = {'width': w, 'height': h, 'angle': t,
+                                   'xy': corner}
+                    rect_data.append(rect_inputs)
 
                     for key, val in args.items():
                         val_list = rect_kwargs.get(key, [])
@@ -581,9 +579,7 @@ class SeedList:
             ax.add_collection(ec)
 
             # Plot Rectangles
-            rects = [Rectangle(xy=xyi, width=wi, height=hi, angle=ai) for
-                     xyi, wi, hi, ai in zip(rect_data['xy'], rect_data['w'],
-                     rect_data['h'], rect_data['angle'])]
+            rects = [Rectangle(**rect_inputs) for rect_inputs in rect_data]
             rc = collections.PatchCollection(rects, False, **rect_kwargs)
             ax.add_collection(rc)
 
@@ -753,10 +749,7 @@ class SeedList:
                         p_kw[kw[:-1]] = p_kw[kw]
                         del p_kw[kw]
             handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
-            if n == 2:
-                ax.legend(handles=handles, loc=loc)
-            else:
-                plt.gca().legend(handles=handles, loc=loc)
+            ax.legend(handles=handles, loc=loc)
 
         # Adjust Axes
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]

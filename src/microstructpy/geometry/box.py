@@ -99,7 +99,8 @@ class Box(NBox):
         else:
             ax = plt.gca()
 
-        xlim, ylim, zlim = self.limits  # pylint: disable=unsubscriptable-object
+        xlim, ylim, zlim = self.limits  # pylint: disable=E0633
+        # E0633: unpacking-non-sequence
 
         inds = [(0, 0), (0, 1), (1, 1), (1, 0)]
 

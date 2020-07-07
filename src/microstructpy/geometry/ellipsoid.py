@@ -553,7 +553,7 @@ class Ellipsoid:
         kws = set(kwargs.keys()) - set(_misc.ori_kws)
 
         total_vol = 0
-        for i in range(n_trials):
+        for _ in range(n_trials):
             params = {}
             for kw in kws:
                 try:
