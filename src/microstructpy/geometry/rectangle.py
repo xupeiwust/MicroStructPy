@@ -85,7 +85,7 @@ class Rectangle(NBox):
         """
         # Unpack the input points
         pts = np.array(points, dtype='float')
-        x, y = pts.T
+        x, y = pts.T  # pylint: disable=unsubscriptable-object
 
         # Find the most likely orientation for the rectangle
         A = np.vstack([x, np.ones(len(x))]).T
@@ -361,8 +361,7 @@ class Rectangle(NBox):
             r = min(dx, dy)
             if r <= 0:
                 break
-            else:
-                circs.append([x, y, r])
+            circs.append([x, y, r])
 
         # Reflect circles
         circs = np.array(circs)
@@ -485,7 +484,7 @@ class Square(Rectangle):
                 area_exp = len_dist * len_dist
             return area_exp
 
-        Rectangle.area_expectation(**kwargs)
+        return Rectangle.area_expectation(**kwargs)
 
     # ----------------------------------------------------------------------- #
     # Circle Approximation                                                    #

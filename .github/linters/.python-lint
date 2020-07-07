@@ -1,5 +1,6 @@
 [MASTER]
 init-hook='import sys; sys.path.append("/home/runner/work/MicroStructPy/MicroStructPy")'
+ignore=src/microstructpy/examples
 
 [MESSAGES CONTROL]
 

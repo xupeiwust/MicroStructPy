@@ -1,3 +1,4 @@
+"""Module for the Ellipsoid class."""
 # --------------------------------------------------------------------------- #
 #                                                                             #
 # Import Modules                                                              #
@@ -24,7 +25,7 @@ __author__ = 'Kenneth (Kip) Hart'
 # Ellipsoid Class                                                             #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-class Ellipsoid(object):
+class Ellipsoid:
     """A 3D Ellipsoid
 
     This class contains the data and functions for a 3D ellispoid.
@@ -159,7 +160,7 @@ class Ellipsoid(object):
         if (ratio_ac is not None) and (ratio_bc is not None):
             ratio_ab = ratio_ac / ratio_bc
 
-        if (size is not None):
+        if size is not None:
             r_eff = 0.5 * size
             r3 = r_eff * r_eff * r_eff
             if (self.a is not None) and (self.b is not None):
@@ -211,10 +212,8 @@ class Ellipsoid(object):
         elif ('matrix' in kwargs) or ('orientation' in kwargs):
             # adapted from:
             # https://www.learnopencv.com/rotation-matrix-to-euler-angles/
-            if 'matrix' in kwargs:
-                R = kwargs['matrix']
-            else:
-                R = kwargs['orientation']
+            R = kwargs.get('matrix', None)
+            R = kwargs.get('orientation', R)
             sy = np.sqrt(R[0][0] * R[0][0] + R[1][0] * R[1][0])
 
             if sy > 1e-6:
@@ -533,8 +532,7 @@ class Ellipsoid(object):
             s_dist = kwargs['size']
             if type(s_dist) in (float, int):
                 return 0.5 * np.pi * s_dist * s_dist * s_dist / 3
-            else:
-                return 0.5 * np.pi * s_dist.moment(3) / 3
+            return 0.5 * np.pi * s_dist.moment(3) / 3
 
         # check for a, b, and c distribution
         try:
@@ -754,7 +752,7 @@ class Ellipsoid(object):
 
         mod_kwargs = {}
         for key, val in kwargs.items():
-            if key == 'facecolors' and type(val) != list:
+            if key == 'facecolors' and not isinstance(val, list):
                 mod_kwargs['color'] = val
             else:
                 mod_kwargs[key] = val
@@ -823,8 +821,7 @@ class Ellipsoid(object):
         mask = sq_dist <= 1
         if single_pt:
             return mask[0]
-        else:
-            return mask
+        return mask
 
 
 def _ellipse_arc(a, b, n):

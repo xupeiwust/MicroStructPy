@@ -126,16 +126,16 @@ class PolyMesh(object):
                     ld = 3 - len(min_match)
                     mask = np.pad(min_match, (0, ld), 'constant',
                                   constant_values=(False, False))
-                    id = np.array([-1, -3, -5])[mask][0]
-                    facet_neighs[fnum][-1] = id
+                    f_id = np.array([-1, -3, -5])[mask][0]
+                    facet_neighs[fnum][-1] = f_id
 
                 max_match = np.all(np.isclose(f_pts, pt_maxs), axis=0)
                 if np.any(max_match):
                     ld = 3 - len(max_match)
                     mask = np.pad(max_match, (0, ld), 'constant',
                                   constant_values=(False, False))
-                    id = np.array([-2, -4, -6])[mask][0]
-                    facet_neighs[fnum][-1] = id
+                    f_id = np.array([-2, -4, -6])[mask][0]
+                    facet_neighs[fnum][-1] = f_id
 
             self.facet_neighbors = facet_neighs
         else:
@@ -678,7 +678,7 @@ class PolyMesh(object):
                         pts_conn.append({cell_num: kp_local})
                         local_kp_conn[key] = kp_global
 
-                    if (adj_cell >= 0) and (adj_cell < len(voro)):
+                    if 0 <= adj_cell < len(voro):
                         conn_info = pts_conn[kp_global]
                         if adj_cell not in conn_info:
                             adj_cell_data = voro[adj_cell]
@@ -715,7 +715,7 @@ class PolyMesh(object):
                     facet_neighbor_list.append(neighbor_pair)
 
                     for f_cell_num in neighbor_pair:
-                        if (f_cell_num >= 0) and (f_cell_num < len(voro)):
+                        if 0 <= f_cell_num < len(voro):
                             region_list[f_cell_num].append(face_num)
 
         # create phase number list
@@ -751,7 +751,8 @@ class PolyMesh(object):
 
             i_n_attempts = 0
             while i_n_attempts < n_iter:
-                print(v_fmt.format(min_len, min_edge, i_n_attempts))
+                if verbose:
+                    print(v_fmt.format(min_len, min_edge, i_n_attempts))
                 # Create Displacement
                 max_step_size = float('inf')
                 step_fracs = 2 * np.random.rand(3) - 1  # [-1, 1]
@@ -1041,7 +1042,7 @@ class PolyMesh(object):
     # ----------------------------------------------------------------------- #
     def __eq__(self, other_mesh):
         # check type
-        if type(other_mesh) is not PolyMesh:
+        if not isinstance(other_mesh, PolyMesh):
             print('not same type')
             return False
 
@@ -1078,10 +1079,10 @@ class PolyMesh(object):
             for j, o_facet in enumerate(other_mesh.facets):
                 if j in o_fnum:
                     continue
-                else:
-                    if set(s_facet) == set(o_facet):
-                        o_fnum.append(j)
-                        break
+
+                if set(s_facet) == set(o_facet):
+                    o_fnum.append(j)
+                    break
 
             if len(o_fnum) != i + 1:
                 print('not same facets')
@@ -1094,10 +1095,10 @@ class PolyMesh(object):
             for j, o_region in enumerate(other_mesh.regions):
                 if j in o_rnum:
                     continue
-                else:
-                    if set(s_region) == set(o_region):
-                        o_rnum.append(j)
-                        break
+
+                if set(s_region) == set(o_region):
+                    o_rnum.append(j)
+                    break
 
             if len(o_rnum) != i + 1:
                 print('not same regions')
@@ -1119,6 +1120,7 @@ class PolyMesh(object):
 
 
 def kp_loop(kp_pairs):
+    """Create a loop of points from a list of point pairs."""
     loop = list(kp_pairs[0])
     kp_arr = np.array(kp_pairs[1:])
     while kp_arr.shape[0] > 0:

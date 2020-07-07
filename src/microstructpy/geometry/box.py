@@ -99,9 +99,7 @@ class Box(NBox):
         else:
             ax = plt.gca()
 
-        xlim = self.limits[0]
-        ylim = self.limits[1]
-        zlim = self.limits[2]
+        xlim, ylim, zlim = self.limits  # pylint: disable=unsubscriptable-object
 
         inds = [(0, 0), (0, 1), (1, 1), (1, 0)]
 
