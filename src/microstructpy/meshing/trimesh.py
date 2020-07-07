@@ -370,7 +370,7 @@ class TriMesh:
         inputs = (self.points, self.elements, self.element_attributes,
                   self.facets, self.facet_attributes)
         repr_str = 'TriMesh('
-        repr_str += ', '.join([repr(v) for v in elements])
+        repr_str += ', '.join([repr(v) for v in inputs])
         repr_str += ')'
         return repr_str
 
