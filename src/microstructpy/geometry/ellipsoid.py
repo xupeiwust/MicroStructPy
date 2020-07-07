@@ -78,37 +78,23 @@ class Ellipsoid:
             self.center = (0, 0, 0)
 
         # Axes
-        self.a = None
-        self.b = None
-        self.c = None
+        self.a = kwargs.get('a', None)
+        self.b = kwargs.get('b', None)
+        self.c = kwargs.get('c', None)
 
-        ratio_ab = None
-        ratio_ac = None
-        ratio_bc = None
+        ratio_ab = kwargs.get('ratio_ab', None)
+        ratio_ac = kwargs.get('ratio_ac', None)
+        ratio_bc = kwargs.get('ratio_bc', None)
 
-        size = None
+        size = kwargs.get('size', None)
 
-        if 'a' in kwargs:
-            self.a = kwargs['a']
-        if 'b' in kwargs:
-            self.b = kwargs['b']
-        if 'c' in kwargs:
-            self.c = kwargs['c']
-        if 'ratio_ab' in kwargs:
-            ratio_ab = kwargs['ratio_ab']
-        elif 'ratio_ba' in kwargs:
+        if 'ratio_ba' in kwargs:
             ratio_ab = 1 / kwargs['ratio_ba']
-        if 'ratio_ac' in kwargs:
-            ratio_ac = kwargs['ratio_ac']
-        elif 'ratio_ca' in kwargs:
+        if 'ratio_ca' in kwargs:
             ratio_ac = 1 / kwargs['ratio_ca']
-        if 'ratio_bc' in kwargs:
-            ratio_bc = kwargs['ratio_bc']
-        elif 'ratio_cb' in kwargs:
+        if 'ratio_cb' in kwargs:
             ratio_bc = 1 / kwargs['ratio_cb']
-        if 'size' in kwargs:
-            size = kwargs['size']
-        elif 'volume' in kwargs:
+        if 'volume' in kwargs:
             size = 2 * np.cbrt(3 * kwargs['volume'] / (4 * np.pi))
         if 'axes' in kwargs:
             self.a, self.b, self.c = kwargs['axes']
