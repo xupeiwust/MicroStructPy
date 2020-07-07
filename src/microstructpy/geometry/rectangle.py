@@ -104,72 +104,25 @@ class Rectangle(NBox):
         maxs = pts_prin.max(axis=0)
         bb_cen = 0.5 * (mins + maxs)
         pts_bb = pts_prin - bb_cen
-
-        x_min, y_min = pts_bb.min(axis=0)
-        x_max, y_max = pts_bb.max(axis=0)
-
-        # Find nearest edge
-        x1_dist = np.abs(pts_bb[:, 0] - x_min)
-        x2_dist = np.abs(pts_bb[:, 0] - x_max)
-        y1_dist = np.abs(pts_bb[:, 1] - y_min)
-        y2_dist = np.abs(pts_bb[:, 1] - y_max)
-
-        dists = np.array([x1_dist, x2_dist, y1_dist, y2_dist]).T
-        min_dist = dists.min(axis=1)
-
-        mask_x1 = np.isclose(x1_dist, min_dist)
-        mask_x2 = np.isclose(x2_dist, min_dist)
-        mask_y1 = np.isclose(y1_dist, min_dist)
-        mask_y2 = np.isclose(y2_dist, min_dist)
-
-        # Group points by edge
-        x_x1 = pts_bb[mask_x1, 0].T
-        y_y1 = pts_bb[mask_y1, 1].T
-        x_x2 = pts_bb[mask_x2, 0].T
-        y_y2 = pts_bb[mask_y2, 1].T
-
-        # Get lines of best fit for each edge
-        x1_fit = np.mean(x_x1)
-        y1_fit = np.mean(y_y1)
-        x2_fit = np.mean(x_x2)
-        y2_fit = np.mean(y_y2)
-
-        x_cen = 0.5 * (x1_fit + x2_fit)
-        y_cen = 0.5 * (y1_fit + y2_fit)
-        fit_cen_bb = np.array([x_cen, y_cen])
-        x_len = x2_fit - x1_fit
-        y_len = y2_fit - y1_fit
+        rect_fit = _axis_aligned_best_fit(pts_bb)
 
         # Translate center to rotated frame
-        fit_cen_prin = fit_cen_bb + bb_cen
-        fit_cen = rot.dot(fit_cen_prin.reshape(-1, 1)).flatten()
+        fit_cen_prin = rect_fit.center + bb_cen
+        rect_fit.center = rot.dot(fit_cen_prin.reshape(-1, 1)).flatten()
 
         # Disambiguate the orientation and axes
         x_ax_seed = np.array(self.matrix)[:, 0]
         x_dot, y_dot = rot.T.dot(x_ax_seed)
 
         if np.abs(x_dot) > np.abs(y_dot):
-            if x_dot > 0:
-                x_ax_fit = rot[:, 0]
-            else:
-                x_ax_fit = - rot[:, 0]
-
-            length = x_len
-            width = y_len
+            x_ax_fit = np.sign(x_dot) * rot[:, 0]
         else:
-            if y_dot > 0:
-                x_ax_fit = rot[:, 1]
-            else:
-                x_ax_fit = - rot[:, 1]
-
-            length = y_len
-            width = x_len
+            x_ax_fit = np.sign(y_dot) * rot[:, 1]
+            rect_fit.side_lengths = [rect_fit.width, rect_fit.length]
 
         ang_diff = np.arcsin(np.cross(x_ax_seed, x_ax_fit))
         ang_rad = self.angle_rad + ang_diff
-
-        rect_fit = Rectangle(center=fit_cen, length=length, width=width,
-                             angle_rad=ang_rad)
+        rect_fit.angle_rad = ang_rad
 
         return rect_fit
 
@@ -291,6 +244,12 @@ class Rectangle(NBox):
         """float: Rotation angle of rectangle - radians"""
         return np.arctan2(self.matrix[1][0], self.matrix[0][0])
 
+    @angle_rad.setter
+    def angle_rad(self, t):
+        cp = np.cos(t)
+        sp = np.sin(t)
+        self.matrix = np.array([[cp, -sp], [sp, cp]])
+
     # ----------------------------------------------------------------------- #
     # Circle Approximation                                                    #
     # ----------------------------------------------------------------------- #
@@ -409,6 +368,44 @@ def _prod_exp(*args):
             arg_mu = arg
         prod *= arg_mu
     return prod
+
+def _axis_aligned_best_fit(pts):
+    x_min, y_min = pts.min(axis=0)
+    x_max, y_max = pts.max(axis=0)
+
+    # Find nearest edge
+    x1_dist = np.abs(pts[:, 0] - x_min)
+    x2_dist = np.abs(pts[:, 0] - x_max)
+    y1_dist = np.abs(pts[:, 1] - y_min)
+    y2_dist = np.abs(pts[:, 1] - y_max)
+
+    dists = np.array([x1_dist, x2_dist, y1_dist, y2_dist]).T
+    min_dist = dists.min(axis=1)
+
+    mask_x1 = np.isclose(x1_dist, min_dist)
+    mask_x2 = np.isclose(x2_dist, min_dist)
+    mask_y1 = np.isclose(y1_dist, min_dist)
+    mask_y2 = np.isclose(y2_dist, min_dist)
+
+    # Group points by edge
+    x_x1 = pts[mask_x1, 0].T
+    y_y1 = pts[mask_y1, 1].T
+    x_x2 = pts[mask_x2, 0].T
+    y_y2 = pts[mask_y2, 1].T
+
+    # Get lines of best fit for each edge
+    x1_fit = np.mean(x_x1)
+    y1_fit = np.mean(y_y1)
+    x2_fit = np.mean(x_x2)
+    y2_fit = np.mean(y_y2)
+
+    x_cen = 0.5 * (x1_fit + x2_fit)
+    y_cen = 0.5 * (y1_fit + y2_fit)
+    fit_cen_bb = np.array([x_cen, y_cen])
+    x_len = x2_fit - x1_fit
+    y_len = y2_fit - y1_fit
+
+    return Rectangle(center=fit_cen_bb, length=x_len, width=y_len)
 
 
 # --------------------------------------------------------------------------- #

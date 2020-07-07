@@ -40,7 +40,7 @@ __author__ = 'Kenneth (Kip) Hart'
 # PolyMesh Class                                                              #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-class PolyMesh(object):
+class PolyMesh:
     """Polygonal/Polyhedral mesh.
 
     The PolyMesh class contains the points, edges, regions, etc. in a polygon
