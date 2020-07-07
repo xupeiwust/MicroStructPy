@@ -64,7 +64,7 @@ class Ellipse:
 
         # orientation
         ori_keys = ['angle_deg', 'angle', 'angle_rad', 'matrix', 'orientation']
-        ori_kwargs = {k: kwargs.get(k, None) for k in ori_keys}
+        ori_kwargs = {k: kwargs[k] for k in ori_keys if k in kwargs}
         self.angle = _get_orientation(ori_kwargs)
 
     # ----------------------------------------------------------------------- #
