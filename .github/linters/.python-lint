@@ -1,6 +1,6 @@
 [MASTER]
 init-hook='import sys; sys.path.append("/home/runner/work/MicroStructPy/MicroStructPy")'
-ignore-patterns=src/microstructpy/examples/*.py
+ignore=docs_banner.py,foam.py,from_image.py,grain_neighborhoods.py,logo.py,standard_voronoi.py,uniform_seeding.py
 
 [MESSAGES CONTROL]
 
