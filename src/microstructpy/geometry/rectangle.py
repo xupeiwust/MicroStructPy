@@ -85,7 +85,8 @@ class Rectangle(NBox):
         """
         # Unpack the input points
         pts = np.array(points, dtype='float')
-        x, y = pts.T  # pylint: disable=unsubscriptable-object
+        x, y = pts.T  # pylint: disable=E0633
+        # E0633: unpacking-non-sequence
 
         # Find the most likely orientation for the rectangle
         A = np.vstack([x, np.ones(len(x))]).T

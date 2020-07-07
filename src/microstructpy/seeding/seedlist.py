@@ -735,12 +735,12 @@ class SeedList:
                     p_kwargs[p].update(seed_kwargs)
             else:
                 for key, val in kwargs.items():
-                    if type(val) in (list, np.array):
+                    if isinstance(val, (list, np.array)):
                         for i, elem in enumerate(val):
                             p_kwargs[i][key] = elem
                     else:
-                        for i in range(len(p_kwargs)):
-                            p_kwargs[i][key] = val
+                        for p_kw in p_kwargs:
+                            p_kw[key] = val
 
             # Replace plural keywords
             for p_kw in p_kwargs:

@@ -33,7 +33,7 @@ __author__ = 'Kenneth (Kip) Hart'
 # TriMesh Class                                                               #
 #                                                                             #
 # --------------------------------------------------------------------------- #
-class TriMesh(object):
+class TriMesh:
     """Triangle/Tetrahedron mesh.
 
     The TriMesh class contains the points, facets, and elements in a triangle/
@@ -554,7 +554,8 @@ class TriMesh(object):
                         f_bnd_mkrs[f_mask] = 1
 
             # write vertices
-            n_pts, n_dim = np.array(self.points).shape
+            n_pts, n_dim = np.array(self.points).shape  # pylint: disable=E0633
+            # E0633: unpacking-non-sequence
             nodes = ' '.join([str(n) for n in (n_pts, n_dim, 0, 1)]) + '\n'
             nodes += ''.join([str(i) + ''.join([' ' + str(x) for x in pt]) +
                               ' ' + str(bnd_mkrs[i]) + '\n' for i, pt in
@@ -564,7 +565,8 @@ class TriMesh(object):
                 file.write(nodes)
 
             # write elements
-            n_ele, n_kp = np.array(self.elements).shape
+            n_ele, n_kp = np.array(self.elements).shape  # pylint: disable=E0633
+            # E0633: unpacking-non-sequence
             is_att = self.element_attributes is not None
             n_att = int(is_att)
             eles = ' '.join([str(n) for n in (n_ele, n_kp, n_att)]) + '\n'

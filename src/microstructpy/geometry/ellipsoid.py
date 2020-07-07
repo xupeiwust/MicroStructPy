@@ -669,7 +669,7 @@ class Ellipsoid:
         nearest_dist = inner_dists[np.arange(len(nearest_ind)), nearest_ind]
         in_plane = plane_mask[nearest_ind]
 
-        cens_inner = pts_inner[~in_plane]
+        cens_inner = pts_inner[~in_plane]  # pylint: disable=E1136
         rads_inner = nearest_dist[~in_plane]
 
         # Exterior spheres
@@ -839,23 +839,24 @@ def _ellipse_arc(a, b, n):
 
 
 def _ellipse_pts(a, b, c, n=81):
+    # E1136: unsubscriptable-object
     arc_xy = _ellipse_arc(a, b, n)
     arc_xz = _ellipse_arc(a, c, n)
     arc_yz = _ellipse_arc(b, c, n)
 
     ii_xy, ii_z = np.meshgrid(np.arange(n - 1), np.arange(n - 1))
-    theta_xy = np.arctan2(arc_xy[:, 1] / b, arc_xy[:, 0] / a)
+    theta_xy = np.arctan2(arc_xy[:, 1] / b, arc_xy[:, 0] / a)  # pylint: disable=E1136
     tt_xy = theta_xy[ii_xy]
 
-    lat_xz = np.arctan2(arc_xz[:, 1] / c, arc_xz[:, 0] / a)
-    lat_yz = np.arctan2(arc_yz[:, 1] / c, arc_yz[:, 0] / b)
+    lat_xz = np.arctan2(arc_xz[:, 1] / c, arc_xz[:, 0] / a)  # pylint: disable=E1136
+    lat_yz = np.arctan2(arc_yz[:, 1] / c, arc_yz[:, 0] / b)  # pylint: disable=E1136
 
     ll_f_xz = lat_xz[ii_z] * np.cos(tt_xy)
     ll_f_yz = lat_yz[ii_z] * np.sin(tt_xy)
     latlat = np.sqrt(ll_f_xz * ll_f_xz + ll_f_yz * ll_f_yz)
 
-    xx = arc_xy[:, 0][ii_xy] * np.cos(latlat)
-    yy = arc_xy[:, 1][ii_xy] * np.cos(latlat)
+    xx = arc_xy[:, 0][ii_xy] * np.cos(latlat)  # pylint: disable=E1136
+    yy = arc_xy[:, 1][ii_xy] * np.cos(latlat)  # pylint: disable=E1136
     zz = c * np.sin(latlat)
 
     pts = np.array([xx.flatten(), yy.flatten(), zz.flatten()]).T
