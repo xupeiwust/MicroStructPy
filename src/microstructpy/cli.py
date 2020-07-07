@@ -292,7 +292,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     # ----------------------------------------------------------------------- #
     # Phases
     # ------
-    if type(phases) is not list:
+    if not isinstance(phases, list):
         phases = [phases]
 
     # Settings
@@ -350,7 +350,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
     # Write seeds
     seeds_types = filetypes.get('seeds', [])
-    if type(seeds_types) != list:
+    if not isinstance(seeds_types, list):
         seeds_types = [seeds_types]
     for seeds_type in seeds_types:
         fname = seed_filename.rstrip('.txt') + '.' + seeds_type
@@ -363,7 +363,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     plot_types = filetypes.get('seeds_plot', ['png'])
     if not plot_types:
         plot_types = []
-    elif type(plot_types) is not list:
+    elif not isinstance(plot_types, list):
         plot_types = [plot_types]
 
     plot_files = []
@@ -403,7 +403,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
     # Write polymesh
     poly_types = filetypes.get('poly', [])
-    if type(poly_types) != list:
+    if not isinstance(poly_types, list):
         poly_types = [poly_types]
 
     for poly_type in poly_types:
@@ -417,7 +417,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     plot_types = filetypes.get('poly_plot', ['png'])
     if not plot_types:
         plot_types = []
-    elif type(plot_types) is not list:
+    elif not isinstance(plot_types, list):
         plot_types = [plot_types]
 
     plot_files = []
@@ -459,7 +459,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
     # Write triangular mesh
     tri_types = filetypes.get('tri', [])
-    if type(tri_types) != list:
+    if not isinstance(tri_types, list):
         tri_types = [tri_types]
 
     for tri_type in tri_types:
@@ -473,7 +473,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
     plot_types = filetypes.get('tri_plot', ['png'])
     if not plot_types:
         plot_types = []
-    elif type(plot_types) is not list:
+    elif not isinstance(plot_types, list):
         plot_types = [plot_types]
 
     plot_files = []
@@ -506,7 +506,7 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
 
     # Set plot types
     plottypes = filetypes.get('verify_plot', ['png'])
-    if type(plottypes) is not list:
+    if not isinstance(plottypes, list):
         plottypes = [plottypes]
 
     # Verify volume fractions
@@ -1015,21 +1015,21 @@ def dict_convert(dictionary, filepath='.'):
     .. _xmltodict: https://github.com/martinblech/xmltodict
     """
 
-    if type(dictionary) is list:
+    if isinstance(dictionary, list):
         return [dict_convert(d) for d in dictionary]
 
     new_dict = collections.OrderedDict()
     for key in dictionary:
         val = dictionary[key]
-        if type(val) in (dict, collections.OrderedDict):
+        if isinstance(val, (dict, collections.OrderedDict))
             new_val = dict_convert(val, filepath)
 
             # Exception for scipy.stats distributions
             if 'dist_type' in val:
                 new_val = _dist_convert(new_val)
 
-        elif type(val) is list:
-            if type(val[0]) is str:
+        elif isinstance(val, list):
+            if isinstance(val[0], str):
                 new_val = [_misc.from_str(v) for v in val]
             else:
                 new_val = dict_convert(val, filepath)
@@ -1044,7 +1044,7 @@ def dict_convert(dictionary, filepath='.'):
             else:
                 new_val = val
 
-        elif type(val) is str:
+        elif isinstance(val, str):
             new_val = _misc.from_str(val)
 
         else:
