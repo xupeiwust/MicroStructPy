@@ -241,8 +241,7 @@ class TriMesh:
 
             # compute cell center
             facet_list = polymesh.regions[cell_ind]
-            cell_kps = set()
-            [cell_kps.update(polymesh.facets[n]) for n in facet_list]
+            cell_kps = {kp for n in facet_list for kp in polymesh.facets[n]}
             cell_cen = pts_arr[list(cell_kps)].mean(axis=0)
 
             # seed number and phase type
@@ -368,10 +367,10 @@ class TriMesh:
         return str_str
 
     def __repr__(self):
+        inputs = (self.points, self.elements, self.element_attributes,
+                  self.facets, self.facet_attributes)
         repr_str = 'TriMesh('
-        repr_str += ', '.join([repr(v) for v in (self.points, self.elements,
-                               self.element_attributes, self.facets,
-                               self.facet_attributes)])
+        repr_str += ', '.join([repr(v) for v in elements])
         repr_str += ')'
         return repr_str
 
@@ -415,9 +414,7 @@ class TriMesh:
             abaqus += '*Part, name=Part-1\n'
 
             abaqus += '*Node\n'
-            abaqus += ''.join([str(i + 1) + ''.join([', ' + str(x) for x in
-                               pt]) + '\n' for i, pt in
-                               enumerate(self.points)])
+            abaqus += ''.join([_pt_ab(*en) for en in enumerate(self.points)])
 
             n_dim = len(self.points[0])
             elem_type = {2: 'CPS3', 3: 'C3D4'}[n_dim]
@@ -789,6 +786,7 @@ class TriMesh:
 
 
 def facet_check(neighs, polymesh, phases):
+    """Check if facet should be preserved in TriMesh."""
     if any([n < 0 for n in neighs]):
         add_facet = True
     else:
@@ -810,3 +808,7 @@ def facet_check(neighs, polymesh, phases):
             add_facet = True
 
     return add_facet
+
+
+def _pt_ab(i, pt):
+    return str(i + 1) + ''.join([', ' + str(x) for x in pt]) + '\n'

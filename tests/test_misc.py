@@ -1,9 +1,9 @@
-import numpy as np
-
+"""Tests for _misc module."""
 from microstructpy import _misc
 
 
 def test_from_str_int():
+    """String conversion to integer."""
     pairs = [('0', 0),
              ('1', 1),
              ('2', 2),
@@ -17,6 +17,7 @@ def test_from_str_int():
 
 
 def test_from_str_float():
+    """String conversion to float."""
     pairs = [('1.234', 1.234),
              ('0.214', 0.214),
              ('-0.4', -0.4),
@@ -29,6 +30,7 @@ def test_from_str_float():
 
 
 def test_from_str_bool():
+    """String conversion to bool."""
     pairs = [('True', True),
              ('False', False),
              ('true', True),
@@ -42,6 +44,7 @@ def test_from_str_bool():
 
 
 def test_from_str_list():
+    """String conversion to list."""
     pairs = [('[0]', [0]),
              ('[1, 0, a]', [1, 0, 'a']),
              ('-2.3, true', [-2.3, True])]
@@ -54,6 +57,7 @@ def test_from_str_list():
 
 
 def test_from_str_list_of_lists():
+    """String conversion to list of lists."""
     lol_str = '[[1, 0, 0, True, False], [2, 4, a, -2.3]]'
     lol_exp = [[1, 0, 0, True, False], [2, 4, 'a', -2.3]]
 
