@@ -900,7 +900,7 @@ class SeedList:
                     pts = _sample_pos_within(pos_dist, n_samples, domain)
                     i_sample = 0
 
-                searching = not _seed_clears(seed, self, tree, rtol)
+                searching = _seed_overlaps(seed, self, tree, rtol)
 
             if searching:
                 i_reject.append(i)
@@ -985,16 +985,13 @@ def _sample_pos_within(distribution, n, domain):
     return np.array(pos[:n])
 
 
-def _seed_clears(seed, seeds, tree, rtol):
+def _seed_overlaps(seed, seeds, tree, rtol):
+    aabb = aabbtree.AABB(seed.geometry.limits)
     bkdwn = np.array(seed.breakdown)
     cens = bkdwn[:, :-1]
     rads = bkdwn[:, -1].reshape(-1, 1)
 
-    aabb = aabbtree.AABB(seed.geometry.limits)
-    olap_inds = tree.overlap_values(aabb, method='BFS')
-    olap_seeds = seeds[olap_inds]
-    clears = True
-    for olap_seed in olap_seeds:
+    for olap_seed in seeds[tree.overlap_values(aabb, method='BFS')]:
         o_bkdwn = np.array(olap_seed.breakdown)
         o_cens = o_bkdwn[:, :-1]
         o_rads = o_bkdwn[:, -1].reshape(1, -1)
@@ -1003,11 +1000,7 @@ def _seed_clears(seed, seeds, tree, rtol):
             dists = distance.cdist(cens, o_cens)
         else:
             rel_pos = o_cens - cens
-            rp2 = rel_pos * rel_pos
-            dists = np.sqrt(np.sum(rp2, axis=1))
-        tol = rtol * np.minimum(rads, o_rads)
-        total_dists = dists + tol - rads - o_rads
-        if np.any(total_dists < 0):
-            clears = False
-            break
-    return clears
+            dists = np.sqrt(np.sum(rel_pos * rel_pos, axis=1))
+        if np.any(dists + rtol * np.minimum(rads, o_rads) < rads + o_rads):
+            return True
+    return False
