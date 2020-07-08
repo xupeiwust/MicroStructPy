@@ -164,7 +164,8 @@ class SeedList:
             s_kwargs['phase'] = phase_num
 
             # Add seed to list
-            seeds.append(_seed.Seed.factory(phase['shape'], **s_kwargs))
+            seeds.append(_seed.Seed.factory(phases[phase_num]['shape'],
+                                            **s_kwargs))
             seed_vol += seeds[-1].volume
 
         return cls(seeds)
@@ -378,29 +379,7 @@ class SeedList:
             _plot_2d(ax, self, seed_args)
 
         # Add legend
-        if material:
-            p_kwargs = [{'label': m} for m in material]
-            if index_by == 'seed':
-                for seed_kwargs, seed in zip(seed_args, self):
-                    p = seed.phase
-                    p_kwargs[p].update(seed_kwargs)
-            else:
-                for key, val in kwargs.items():
-                    if type(val) in (list, np.array):
-                        for i, elem in enumerate(val):
-                            p_kwargs[i][key] = elem
-                    else:
-                        for p_kwargs_i in p_kwargs:
-                            p_kwargs_i[key] = val
-
-            # Replace plural keywords
-            for p_kw in p_kwargs:
-                for kw in _misc.mpl_plural_kwargs:
-                    if kw in p_kw:
-                        p_kw[kw[:-1]] = p_kw[kw]
-                        del p_kw[kw]
-            handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
-            ax.legend(handles=handles, loc=loc)
+        _add_legend(ax, material, self, seed_args, index_by, loc)
 
         # Adjust Axes
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
@@ -483,29 +462,7 @@ class SeedList:
             ax.autoscale_view()
 
         # Add legend
-        if material:
-            p_kwargs = [{'label': m} for m in material]
-            if index_by == 'seed':
-                for seed_kwargs, seed in zip(seed_args, self):
-                    p = seed.phase
-                    p_kwargs[p].update(seed_kwargs)
-            else:
-                for key, val in kwargs.items():
-                    if isinstance(val, (list, np.array)):
-                        for i, elem in enumerate(val):
-                            p_kwargs[i][key] = elem
-                    else:
-                        for p_kw in p_kwargs:
-                            p_kw[key] = val
-
-            # Replace plural keywords
-            for p_kw in p_kwargs:
-                for kw in _misc.mpl_plural_kwargs:
-                    if kw in p_kw:
-                        p_kw[kw[:-1]] = p_kw[kw]
-                        del p_kw[kw]
-            handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
-            ax.legend(handles=handles, loc=loc)
+        _add_legend(ax, material, self, seed_args, index_by, loc)
 
         # Adjust Axes
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
@@ -887,8 +844,6 @@ def _plot_2d(ax, seeds, seed_args):
             ec_kwargs[key] = v1
 
     # Plot Circles and Ellipses
-    ax = plt.gca()
-
     w = np.array(ellipse_data['w'])
     h = np.array(ellipse_data['h'])
     a = np.array(ellipse_data['a'])
@@ -903,6 +858,32 @@ def _plot_2d(ax, seeds, seed_args):
     ax.add_collection(rc)
 
     ax.autoscale_view()
+
+
+def _add_legend(ax, material, seeds, seed_args, index_by, loc):
+    if material:
+        p_kwargs = [{'label': m} for m in material]
+        if index_by == 'seed':
+            for seed_kwargs, seed in zip(seed_args, seeds):
+                p = seed.phase
+                p_kwargs[p].update(seed_kwargs)
+        else:
+            for key, val in kwargs.items():
+                if type(val) in (list, np.array):
+                    for i, elem in enumerate(val):
+                        p_kwargs[i][key] = elem
+                else:
+                    for p_kwargs_i in p_kwargs:
+                        p_kwargs_i[key] = val
+
+        # Replace plural keywords
+        for p_kw in p_kwargs:
+            for kw in _misc.mpl_plural_kwargs:
+                if kw in p_kw:
+                    p_kw[kw[:-1]] = p_kw[kw]
+                    del p_kw[kw]
+        handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
+        ax.legend(handles=handles, loc=loc)
 
 
 def sample_pos(distribution, n=1):
