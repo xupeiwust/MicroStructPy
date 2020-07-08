@@ -390,7 +390,7 @@ class SeedList:
                 zip(lims, s_lims)]
         _misc.adjust_axes(ax, lims)
 
-    def plot_breakdown(self, index_by='seed', material=[], loc=0, **kwargs):
+    def plot_breakdown(self, index_by='seed', material=None, loc=0, **kwargs):
         """Plot the breakdowns of the seeds in seed list.
 
         This function plots the breakdowns of seeds contained in the seed list.
@@ -433,33 +433,7 @@ class SeedList:
                 seed.plot_breakdown(**args)
 
         elif n == 2:
-            breakdowns = np.zeros((0, 3))
-            ec_kwargs = {}
-            for seed, args in zip(self, seed_args):
-                breakdowns = np.concatenate((breakdowns, seed.breakdown))
-                n_c = len(seed.breakdown)
-                for key, val in args.items():
-                    val_list = ec_kwargs.get(key, [])
-                    val_list.extend(n_c * [val])
-                    ec_kwargs[key] = val_list
-            d = 2 * breakdowns[:, -1]
-            xy = breakdowns[:, :-1]
-            a = np.full(len(breakdowns), 0)
-
-            # abbreviate kwargs if all the same
-            for key, val in ec_kwargs.items():
-                v1 = val[0]
-                same = True
-                for v in val:
-                    same &= v == v1
-                if same:
-                    ec_kwargs[key] = v1
-
-            ec = collections.EllipseCollection(d, d, a, units='x', offsets=xy,
-                                               transOffset=ax.transData,
-                                               **ec_kwargs)
-            ax.add_collection(ec)
-            ax.autoscale_view()
+            _plot_2d_breakdowns(ax, self, seed_args)
 
         # Add legend
         _add_legend(ax, material, self, seed_args, kwargs, index_by, loc)
@@ -476,8 +450,8 @@ class SeedList:
     # ----------------------------------------------------------------------- #
     # Position Function                                                       #
     # ----------------------------------------------------------------------- #
-    def position(self, domain, pos_dists={}, rng_seed=0, hold=[],
-                 max_attempts=10000, rtol='fit', verbose=False):
+    def position(self, domain, pos_dists=None, rng_seed=0, hold=None,
+                 **kwargs):
         """Position seeds in a domain
 
         This method positions the seeds within a domain. The "domain" should be
@@ -533,13 +507,16 @@ class SeedList:
                 between seeds. This parameter should be between 0 and 1.
                 Using the 'fit' option, a function will determine the value
                 for rtol based on the mean and standard deviation in seed
-                volumes.
+                volumes. Defaults to 'fit'.
             verbose (bool): *(optional)* This option will print a running
                 counter of how many seeds have been positioned.
                 Defaults to False.
 
         """  # NOQA: E501
-        if len(hold) == 0:
+        max_attempts = kwargs.get('max_attempts', 10000)
+        rtol = kwargs.get('rtol', 'fit')
+        verbose = kwargs.get('verbose', False)
+        if hold is None:
             hold = [False for seed in self]
 
         # set the spatial distributions
@@ -549,7 +526,10 @@ class SeedList:
         distribs = []
         n_phases = max([s.phase for s in self]) + 1
         for i in range(n_phases):
-            distribs.append(pos_dists.get(i, u_dist))
+            try:
+                distribs.append(pos_dists.get(i, u_dist))
+            except AttributeError:
+                distribs.append(u_dist)
 
         # Add hold seeds
         n_seeds = len(self)
@@ -786,32 +766,23 @@ def _plot_2d(ax, seeds, seed_args):
     for seed, args in zip(seeds, seed_args):
         geom_name = type(seed.geometry).__name__.lower().strip()
         if geom_name == 'ellipse':
-            a, b = seed.geometry.axes
-            cen = np.array(seed.position)
-            t = seed.geometry.angle_deg
-
-            ellipse_data['w'].append(2 * a)
-            ellipse_data['h'].append(2 * b)
-            ellipse_data['a'].append(t)
-            ellipse_data['xy'].append(cen)
+            ellipse_data['w'].append(2 * seed.geometry.a)
+            ellipse_data['h'].append(2 * seed.geometry.b)
+            ellipse_data['a'].append(seed.geometry.angle_deg)
+            ellipse_data['xy'].append(np.array(seed.position))
 
             for key, val in args.items():
-                val_list = ec_kwargs.get(key, [])
-                val_list.append(val)
+                val_list = ec_kwargs.get(key, []) + [val]
                 ec_kwargs[key] = val_list
 
         elif geom_name == 'circle':
-            diam = seed.geometry.diameter
-            cen = np.array(seed.position)
-
-            ellipse_data['w'].append(diam)
-            ellipse_data['h'].append(diam)
+            ellipse_data['w'].append(seed.geometry.diameter)
+            ellipse_data['h'].append(seed.geometry.diameter)
             ellipse_data['a'].append(0)
-            ellipse_data['xy'].append(cen)
+            ellipse_data['xy'].append(np.array(seed.position))
 
             for key, val in args.items():
-                val_list = ec_kwargs.get(key, [])
-                val_list.append(val)
+                val_list = ec_kwargs.get(key, []) + [val]
                 ec_kwargs[key] = val_list
 
         elif geom_name in ['rectangle', 'square']:
@@ -822,16 +793,14 @@ def _plot_2d(ax, seeds, seed_args):
             rect_data.append(rect_inputs)
 
             for key, val in args.items():
-                val_list = rect_kwargs.get(key, [])
-                val_list.append(val)
+                val_list = rect_kwargs.get(key, []) + [val]
                 rect_kwargs[key] = val_list
 
         elif geom_name == 'nonetype':
             pass
 
         else:
-            e_str = 'Cannot plot groups of ' + geom_name
-            e_str += ' yet.'
+            e_str = 'Cannot plot groups of ' + geom_name + ' yet.'
             raise NotImplementedError(e_str)
 
     # abbreviate kwargs if all the same
@@ -860,13 +829,41 @@ def _plot_2d(ax, seeds, seed_args):
     ax.autoscale_view()
 
 
+def _plot_2d_breakdowns(ax, seeds, seed_args):
+    breakdowns = np.zeros((0, 3))
+    ec_kwargs = {}
+    for seed, args in zip(seeds, seed_args):
+        breakdowns = np.concatenate((breakdowns, seed.breakdown))
+        n_c = len(seed.breakdown)
+        for key, val in args.items():
+            val_list = ec_kwargs.get(key, [])
+            val_list.extend(n_c * [val])
+            ec_kwargs[key] = val_list
+    d = 2 * breakdowns[:, -1]
+    xy = breakdowns[:, :-1]
+    a = np.full(len(breakdowns), 0)
+
+    # abbreviate kwargs if all the same
+    for key, val in ec_kwargs.items():
+        v1 = val[0]
+        same = True
+        for v in val:
+            same &= v == v1
+        if same:
+            ec_kwargs[key] = v1
+
+    ec = collections.EllipseCollection(d, d, a, units='x', offsets=xy,
+                                       transOffset=ax.transData, **ec_kwargs)
+    ax.add_collection(ec)
+    ax.autoscale_view()
+
+
 def _add_legend(ax, material, seeds, seed_args, kwargs, index_by, loc):
     if material:
         p_kwargs = [{'label': m} for m in material]
         if index_by == 'seed':
             for seed_kwargs, seed in zip(seed_args, seeds):
-                p = seed.phase
-                p_kwargs[p].update(seed_kwargs)
+                p_kwargs[seed.phase].update(seed_kwargs)
         else:
             for key, val in kwargs.items():
                 if type(val) in (list, np.array):
@@ -882,8 +879,8 @@ def _add_legend(ax, material, seeds, seed_args, kwargs, index_by, loc):
                 if kw in p_kw:
                     p_kw[kw[:-1]] = p_kw[kw]
                     del p_kw[kw]
-        handles = [patches.Patch(**p_kw) for p_kw in p_kwargs]
-        ax.legend(handles=handles, loc=loc)
+        ax.legend(handles=[patches.Patch(**p_kw) for p_kw in p_kwargs],
+                  loc=loc)
 
 
 def sample_pos(distribution, n=1):
