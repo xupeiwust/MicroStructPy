@@ -379,7 +379,7 @@ class SeedList:
             _plot_2d(ax, self, seed_args)
 
         # Add legend
-        _add_legend(ax, material, self, seed_args, index_by, loc)
+        _add_legend(ax, material, self, seed_args, kwargs, index_by, loc)
 
         # Adjust Axes
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
@@ -462,7 +462,7 @@ class SeedList:
             ax.autoscale_view()
 
         # Add legend
-        _add_legend(ax, material, self, seed_args, index_by, loc)
+        _add_legend(ax, material, self, seed_args, kwargs, index_by, loc)
 
         # Adjust Axes
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
@@ -860,7 +860,7 @@ def _plot_2d(ax, seeds, seed_args):
     ax.autoscale_view()
 
 
-def _add_legend(ax, material, seeds, seed_args, index_by, loc):
+def _add_legend(ax, material, seeds, seed_args, kwargs, index_by, loc):
     if material:
         p_kwargs = [{'label': m} for m in material]
         if index_by == 'seed':
