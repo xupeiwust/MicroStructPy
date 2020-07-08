@@ -59,7 +59,7 @@ class Ellipse:
 
         # axes
         shape_keys = ['a', 'b', 'axes', 'size', 'area', 'aspect_ratio']
-        shape_kwargs = {k: kwargs.get(k, None) for k in shape_keys}
+        shape_kwargs = {k: kwargs[k] for k in shape_keys if k in kwargs}
         self.a, self.b = _get_shape(shape_kwargs)
 
         # orientation
