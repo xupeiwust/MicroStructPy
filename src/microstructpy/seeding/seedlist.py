@@ -164,9 +164,8 @@ class SeedList:
             s_kwargs['phase'] = phase_num
 
             # Add seed to list
-            seed = _seed.Seed.factory(phase['shape'], **s_kwargs)
-            seeds.append(seed)
-            seed_vol += seed.volume
+            seeds.append(_seed.Seed.factory(phase['shape'], **s_kwargs))
+            seed_vol += seeds[-1].volume
 
         return cls(seeds)
 
@@ -443,37 +442,14 @@ class SeedList:
             **kwargs: Keyword arguments to pass to matplotlib
 
         """
-        seed_args = [{} for seed in self]
-        for seed_num, seed in enumerate(self):
-            phase_num = seed.phase
-            for key, val in kwargs.items():
-                if type(val) in (list, np.array):
-                    if index_by == 'seed' and len(val) > seed_num:
-                        seed_args[seed_num][key] = val[seed_num]
-                    elif index_by == 'material' and len(val) > phase_num:
-                        seed_args[seed_num][key] = val[phase_num]
-                else:
-                    seed_args[seed_num][key] = val
+        if material is None:
+            material = []
+        seed_args = _plt_args(self, index_by, kwargs)
 
         n = self.__getitem__(0).geometry.n_dim
-        if n == 2:
-            ax = plt.gca()
-        else:
-            ax = plt.gcf().gca(projection=Axes3D.name)
-        n_obj = _misc.ax_objects(ax)
-        if n_obj > 0:
-            xlim = ax.get_xlim()
-            ylim = ax.get_ylim()
-        else:
-            xlim = [float('inf'), -float('inf')]
-            ylim = [float('inf'), -float('inf')]
+        ax, lims = _get_axes(n)
 
         if n == 3:
-            if n_obj > 0:
-                zlim = ax.get_zlim()
-            else:
-                zlim = [float('inf'), -float('inf')]
-
             for seed, args in zip(self, seed_args):
                 seed.plot_breakdown(**args)
 
@@ -500,7 +476,6 @@ class SeedList:
                 if same:
                     ec_kwargs[key] = v1
 
-            ax = plt.gca()
             ec = collections.EllipseCollection(d, d, a, units='x', offsets=xy,
                                                transOffset=ax.transData,
                                                **ec_kwargs)
@@ -536,18 +511,10 @@ class SeedList:
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
         mins = np.array(seed_lims)[:, 0::2].min(axis=0)
         maxs = np.array(seed_lims)[:, 1::2].max(axis=0)
-        xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
-        ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
-        if n == 2:
-            plt.axis('square')
-            ax.set_xlim(xlim)
-            ax.set_ylim(ylim)
-        if n == 3:
-            zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            ax.set_xlim(xlim)
-            ax.set_ylim(ylim)
-            ax.set_zlim(zlim)
-            _misc.axisEqual3D(ax)
+        s_lims = list(zip(mins, maxs))
+        lims = [(min(l1[0], l2[0]), max(l1[1], l2[1])) for l1, l2 in
+                zip(lims, s_lims)]
+        _misc.adjust_axes(ax, lims)
 
     # ----------------------------------------------------------------------- #
     # Position Function                                                       #
@@ -894,8 +861,7 @@ def _plot_2d(ax, seeds, seed_args):
             w, h = seed.geometry.side_lengths
             corner = seed.geometry.corner
             t = seed.geometry.angle_deg
-            rect_inputs = {'width': w, 'height': h, 'angle': t,
-                            'xy': corner}
+            rect_inputs = {'width': w, 'height': h, 'angle': t, 'xy': corner}
             rect_data.append(rect_inputs)
 
             for key, val in args.items():
@@ -928,8 +894,7 @@ def _plot_2d(ax, seeds, seed_args):
     a = np.array(ellipse_data['a'])
     xy = np.array(ellipse_data['xy'])
     ec = collections.EllipseCollection(w, h, a, units='x', offsets=xy,
-                                        transOffset=ax.transData,
-                                        **ec_kwargs)
+                                       transOffset=ax.transData, **ec_kwargs)
     ax.add_collection(ec)
 
     # Plot Rectangles
