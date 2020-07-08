@@ -134,55 +134,28 @@ class SeedList:
         if isinstance(phases, dict):
             phases = [phases]
 
+        # Set RNG Seeds
         max_int = np.iinfo(np.int32).max
         sample_rng_seeds = _set_sample_rng_seeds(phases, rng_seeds, max_int)
 
         # determine dimensionality, set default shape
-        default_shapes = {2: 'circle', 3: 'sphere'}
-        n_dim = None
-        for phase in phases:
-            if 'shape' in phase:
-                n_dim = geometry.factory(phase['shape']).n_dim
-        if n_dim is None:
-            e_str = 'Number of dimensions could not be determined from phase '
-            e_str += 'shapes. Consider setting the shape of a phase, or'
-            e_str += ' specifying the number of dimensions.'
-            raise ValueError(e_str)
-
+        n_dim = _get_n_dim(phases)
         for phase in phases:
             if 'shape' in phase:
                 assert geometry.factory(phase['shape']).n_dim == n_dim
             else:
-                phase['shape'] = default_shapes[n_dim]
-
-        # compute volume of each phase
-        vol_rng = sample_rng_seeds['fraction']
-        n_phases = len(phases)
-        rel_vols = np.ones(n_phases)
-        for i, phase in enumerate(phases):
-            vol = phase.get('fraction', 1)
-            try:
-                v_sample = -1
-                while v_sample < 0:
-                    v_sample = vol.rvs(random_state=vol_rng)
-                    vol_rng = (vol_rng + 1) % max_int
-                rel_vols[i] = v_sample
-            except AttributeError:
-                rel_vols[i] = vol
-        vol_fracs = rel_vols / sum(rel_vols)
-        phase_vols = volume * vol_fracs
+                phase['shape'] = {2: 'circle', 3: 'sphere'}[n_dim]
 
         # compute population fractions for each phase
-        pop_fracs = _calc_pop_fracs(n_dim, phases, phase_vols)
-        hist_data = (pop_fracs, np.arange(len(phases)))
-        phase_dist = scipy.stats.rv_histogram(hist_data)
+        pop_fracs = _calc_pop_fracs(n_dim, phases, sample_rng_seeds, max_int)
+        p_dist = scipy.stats.rv_histogram((pop_fracs, np.arange(len(phases))))
 
         seed_vol = 0
         seeds = []
         while seed_vol < volume:
             # Pick the phase
             rng_seed = sample_rng_seeds['phase']
-            phase_num = phase_dist.rvs(random_state=rng_seed)
+            phase_num = p_dist.rvs(random_state=rng_seed)
             sample_rng_seeds['phase'] = (rng_seed + 1) % max_int
             phase = phases[phase_num]
 
@@ -394,17 +367,7 @@ class SeedList:
         """
         if material is None:
             material = []
-        seed_args = [{} for seed in self]
-        for seed_num, seed in enumerate(self):
-            phase_num = seed.phase
-            for key, val in kwargs.items():
-                if type(val) in (list, np.array):
-                    if index_by == 'seed' and len(val) > seed_num:
-                        seed_args[seed_num][key] = val[seed_num]
-                    elif index_by == 'material' and len(val) > phase_num:
-                        seed_args[seed_num][key] = val[phase_num]
-                else:
-                    seed_args[seed_num][key] = val
+        seed_args = _plt_args(self, index_by)
 
         n = self.__getitem__(0).geometry.n_dim
         if n == 2:
@@ -434,9 +397,6 @@ class SeedList:
 
             rect_data = []
             rect_kwargs = {}
-
-            pc_verts = []
-            pc_kwargs = {}
             for seed, args in zip(self, seed_args):
                 geom_name = type(seed.geometry).__name__.lower().strip()
                 if geom_name == 'ellipse':
@@ -481,14 +441,6 @@ class SeedList:
                         val_list.append(val)
                         rect_kwargs[key] = val_list
 
-                elif geom_name == 'curl':
-                    xy = seed.geometry.plot_xy()
-                    pc_verts.append(xy)
-                    for key, val in args.items():
-                        val_list = pc_kwargs.get(key, [])
-                        val_list.append(val)
-                        pc_kwargs[key] = val_list
-
                 elif geom_name == 'nonetype':
                     pass
 
@@ -506,14 +458,6 @@ class SeedList:
                 if same:
                     ec_kwargs[key] = v1
 
-            for key, val in pc_kwargs.items():
-                v1 = val[0]
-                same = True
-                for v in val:
-                    same &= v == v1
-                if same:
-                    pc_kwargs[key] = v1
-
             # Plot Circles and Ellipses
             ax = plt.gca()
 
@@ -530,10 +474,6 @@ class SeedList:
             rects = [Rectangle(**rect_inputs) for rect_inputs in rect_data]
             rc = collections.PatchCollection(rects, False, **rect_kwargs)
             ax.add_collection(rc)
-
-            # Plot Polygons
-            pc = collections.PolyCollection(pc_verts, **pc_kwargs)
-            ax.add_collection(pc)
 
             ax.autoscale_view()
 
@@ -875,6 +815,19 @@ class SeedList:
         self.seeds = self[keep_mask].seeds
 
 
+def _get_n_dim(phases):
+    n_dim = None
+    for phase in phases:
+        if 'shape' in phase:
+            n_dim = geometry.factory(phase['shape']).n_dim
+    if n_dim is None:
+        e_str = 'Number of dimensions could not be determined from phase '
+        e_str += 'shapes. Consider setting the shape of a phase, or'
+        e_str += ' specifying the number of dimensions.'
+        raise ValueError(e_str)
+    return n_dim
+
+
 def _set_sample_rng_seeds(phases, rng_seeds, maxint):
     rng_keys = list({k for p in phases for k in p} - set(_misc.gen_kws))
     rng_keys.extend(['fraction', 'phase'])
@@ -888,14 +841,31 @@ def _set_sample_rng_seeds(phases, rng_seeds, maxint):
     return sample_seeds
 
 
-def _calc_pop_fracs(n_dim, phases, phase_vols):
+def _calc_pop_fracs(n_dim, phases, sample_rng_seeds, max_int):
+    # compute volume of each phase
+    vol_rng = sample_rng_seeds['fraction']
+    n_phases = len(phases)
+    rel_vols = np.ones(n_phases)
+    for i, phase in enumerate(phases):
+        vol = phase.get('fraction', 1)
+        try:
+            v_sample = -1
+            while v_sample < 0:
+                v_sample = vol.rvs(random_state=vol_rng)
+                vol_rng = (vol_rng + 1) % max_int
+            rel_vols[i] = v_sample
+        except AttributeError:
+            rel_vols[i] = vol
+    vol_fracs = rel_vols / sum(rel_vols)
+
+    # Compute the average grain volume of each phase
     if n_dim == 2:
         avg_vols = [geometry.factory(p['shape']).area_expectation(**p)
                     for p in phases]
     else:
         avg_vols = [geometry.factory(p['shape']).volume_expectation(**p)
                     for p in phases]
-    weights = phase_vols / np.array(avg_vols)
+    weights = vol_fracs / np.array(avg_vols)
     pop_fracs = weights / sum(weights)
     return pop_fracs
 
@@ -949,6 +919,22 @@ def _sample_phase_args(phase, sample_rng_seeds, n_dim, maxint):
         # Update the RNG seed
         sample_rng_seeds[kw] = (rng_seed + 1) % maxint
     return seed_kwargs
+
+
+def _plt_args(seeds, index_by):
+    seed_args = [{} for seed in seeds]
+    for seed_num, seed in enumerate(seeds):
+        phase_num = seed.phase
+        for key, val in kwargs.items():
+            if type(val) in (list, np.array):
+                if index_by == 'seed' and len(val) > seed_num:
+                    seed_args[seed_num][key] = val[seed_num]
+                elif index_by == 'material' and len(val) > phase_num:
+                    seed_args[seed_num][key] = val[phase_num]
+            else:
+                seed_args[seed_num][key] = val
+    return seed_args
+
 
 def sample_pos(distribution, n=1):
     """ Sample position distribution
