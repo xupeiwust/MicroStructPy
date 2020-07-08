@@ -148,14 +148,15 @@ class SeedList:
 
         # compute population fractions for each phase
         pop_fracs = _calc_pop_fracs(n_dim, phases, sample_rng_seeds, max_int)
-        p_dist = scipy.stats.rv_histogram((pop_fracs, np.arange(len(phases))))
+        p_dist = scipy.stats.rv_histogram((pop_fracs,
+                                           np.arange(len(phases) + 1)))
 
         seed_vol = 0
         seeds = []
         while seed_vol < volume:
             # Pick the phase
             rng_seed = sample_rng_seeds['phase']
-            phase_num = p_dist.rvs(random_state=rng_seed)
+            phase_num = int(p_dist.rvs(random_state=rng_seed))
             sample_rng_seeds['phase'] = (rng_seed + 1) % max_int
 
             # Create the seed
