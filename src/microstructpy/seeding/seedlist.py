@@ -515,7 +515,6 @@ class SeedList:
 
         """  # NOQA: E501
         max_attempts = kwargs.get('max_attempts', 10000)
-        rtol = kwargs.get('rtol', 'fit')
         verbose = kwargs.get('verbose', False)
         if hold is None:
             hold = [False for seed in self]
@@ -542,21 +541,11 @@ class SeedList:
                 tree.add(aabb, i)
 
         positioned = np.array(hold)
-        vols = np.array([s.volume for s in self])
-        i_sort = np.flip(np.argsort(vols))
-        posd_sort = positioned[i_sort]
-        i_position = i_sort[~posd_sort]
+        i_sort = np.flip(np.argsort([s.volume for s in self]))
+        i_position = i_sort[~positioned[i_sort]]
 
         # allowable overlap, relative to radius
-        cv = scipy.stats.variation(vols)
-        if domain.n_dim == 2 and rtol == 'fit':
-            numer = 0.362954 * cv * cv - 0.419069 * cv + .184959
-            denom = cv * cv - 1.05989 * cv + 0.365096
-            rtol = numer / denom
-        elif rtol == 'fit':
-            numer = 0.471115 * cv * cv - 0.602324 * cv + 0.297562
-            denom = cv * cv - 1.08469 * cv + 0.428216
-            rtol = numer / denom
+        rtol = kwargs.get('rtol', calc_rtol(self))
 
         # position the remaining seeds
         i_reject = []
@@ -576,11 +565,10 @@ class SeedList:
             pts = _sample_pos_within(pos_dist, n_samples, domain)
             while searching and n_attempts < max_attempts:
                 pt = pts[i_sample]
-
                 seed.position = pt
+
                 n_attempts += 1
                 i_sample += 1
-
                 if i_sample == n_samples:
                     pts = _sample_pos_within(pos_dist, n_samples, domain)
                     i_sample = 0
@@ -634,7 +622,7 @@ def _set_sample_rng_seeds(phases, rng_seeds, maxint):
     int_step = maxint / n_keys
     sample_seeds = {}
     for i, k in enumerate(rng_keys):
-        rng_seed = rng_seeds.get(k, 0) + i * int_step
+        rng_seed = int(rng_seeds.get(k, 0) + i * int_step)
         sample_seeds[k] = rng_seed % maxint
     return sample_seeds
 
@@ -882,6 +870,23 @@ def _add_legend(ax, material, seeds, seed_args, kwargs, index_by, loc):
                     del p_kw[kw]
         ax.legend(handles=[patches.Patch(**p_kw) for p_kw in p_kwargs],
                   loc=loc)
+
+
+def calc_rtol(seeds):
+    """Calculate relative overlap tolerance."""
+    cv = scipy.stats.variation([s.volume for s in seeds])
+    n_dim = seeds[0].geometry.n_dim
+    if n_dim == 2:
+        numer = 0.362954 * cv * cv - 0.419069 * cv + .184959
+        denom = cv * cv - 1.05989 * cv + 0.365096
+        rtol = numer / denom
+    elif n_dim == 3:
+        numer = 0.471115 * cv * cv - 0.602324 * cv + 0.297562
+        denom = cv * cv - 1.08469 * cv + 0.428216
+        rtol = numer / denom
+    else:
+        raise ValueError('Cannot calculate rtol for {}-D.'.format(n_dim))
+    return rtol
 
 
 def sample_pos(distribution, n=1):
