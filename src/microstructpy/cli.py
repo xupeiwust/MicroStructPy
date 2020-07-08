@@ -641,16 +641,7 @@ def plot_seeds(seeds, phases, domain, plot_files=[], plot_axes=True,
 
     # Crop to Domain
     d_lims = domain.limits
-    if n_dim == 2:
-        plt.axis('square')
-        plt.xlim(d_lims[0])
-        plt.ylim(d_lims[1])
-    elif n_dim == 3:
-        plt.gca().set_xlim(d_lims[0])
-        plt.gca().set_ylim(d_lims[1])
-        plt.gca().set_zlim(d_lims[2])
-
-        _misc.axisEqual3D(plt.gca())
+    _misc.adjust_axes(ax, d_lims)
 
     # Save plot
     for fname in plot_files:

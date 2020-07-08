@@ -157,11 +157,10 @@ class SeedList:
             rng_seed = sample_rng_seeds['phase']
             phase_num = p_dist.rvs(random_state=rng_seed)
             sample_rng_seeds['phase'] = (rng_seed + 1) % max_int
-            phase = phases[phase_num]
 
             # Create the seed
-            s_kwargs = _sample_phase_args(phase, sample_rng_seeds, n_dim,
-                                          max_int)
+            s_kwargs = _sample_phase_args(phases[phase_num], sample_rng_seeds,
+                                          n_dim, max_int)
             s_kwargs['phase'] = phase_num
 
             # Add seed to list
@@ -370,112 +369,14 @@ class SeedList:
         seed_args = _plt_args(self, index_by, kwargs)
 
         n = self.__getitem__(0).geometry.n_dim
-        if n == 2:
-            ax = plt.gca()
-        else:
-            ax = plt.gcf().gca(projection=Axes3D.name)
-        n_obj = _misc.ax_objects(ax)
-        if n_obj > 0:
-            xlim = ax.get_xlim()
-            ylim = ax.get_ylim()
-        else:
-            xlim = [float('inf'), -float('inf')]
-            ylim = [float('inf'), -float('inf')]
+        ax, lims = _get_axes(n)
 
         if n == 3:
-            if n_obj > 0:
-                zlim = ax.get_zlim()
-            else:
-                zlim = [float('inf'), -float('inf')]
-
             for seed, args in zip(self, seed_args):
                 seed.plot(**args)
 
         elif n == 2:
-            ellipse_data = {'w': [], 'h': [], 'a': [], 'xy': []}
-            ec_kwargs = {}
-
-            rect_data = []
-            rect_kwargs = {}
-            for seed, args in zip(self, seed_args):
-                geom_name = type(seed.geometry).__name__.lower().strip()
-                if geom_name == 'ellipse':
-                    a, b = seed.geometry.axes
-                    cen = np.array(seed.position)
-                    t = seed.geometry.angle_deg
-
-                    ellipse_data['w'].append(2 * a)
-                    ellipse_data['h'].append(2 * b)
-                    ellipse_data['a'].append(t)
-                    ellipse_data['xy'].append(cen)
-
-                    for key, val in args.items():
-                        val_list = ec_kwargs.get(key, [])
-                        val_list.append(val)
-                        ec_kwargs[key] = val_list
-
-                elif geom_name == 'circle':
-                    diam = seed.geometry.diameter
-                    cen = np.array(seed.position)
-
-                    ellipse_data['w'].append(diam)
-                    ellipse_data['h'].append(diam)
-                    ellipse_data['a'].append(0)
-                    ellipse_data['xy'].append(cen)
-
-                    for key, val in args.items():
-                        val_list = ec_kwargs.get(key, [])
-                        val_list.append(val)
-                        ec_kwargs[key] = val_list
-
-                elif geom_name in ['rectangle', 'square']:
-                    w, h = seed.geometry.side_lengths
-                    corner = seed.geometry.corner
-                    t = seed.geometry.angle_deg
-                    rect_inputs = {'width': w, 'height': h, 'angle': t,
-                                   'xy': corner}
-                    rect_data.append(rect_inputs)
-
-                    for key, val in args.items():
-                        val_list = rect_kwargs.get(key, [])
-                        val_list.append(val)
-                        rect_kwargs[key] = val_list
-
-                elif geom_name == 'nonetype':
-                    pass
-
-                else:
-                    e_str = 'Cannot plot groups of ' + geom_name
-                    e_str += ' yet.'
-                    raise NotImplementedError(e_str)
-
-            # abbreviate kwargs if all the same
-            for key, val in ec_kwargs.items():
-                v1 = val[0]
-                same = True
-                for v in val:
-                    same &= v == v1
-                if same:
-                    ec_kwargs[key] = v1
-
-            # Plot Circles and Ellipses
-            ax = plt.gca()
-
-            w = np.array(ellipse_data['w'])
-            h = np.array(ellipse_data['h'])
-            a = np.array(ellipse_data['a'])
-            xy = np.array(ellipse_data['xy'])
-            ec = collections.EllipseCollection(w, h, a, units='x', offsets=xy,
-                                               transOffset=ax.transData,
-                                               **ec_kwargs)
-            ax.add_collection(ec)
-
-            # Plot Rectangles
-            rects = [Rectangle(**rect_inputs) for rect_inputs in rect_data]
-            rc = collections.PatchCollection(rects, False, **rect_kwargs)
-            ax.add_collection(rc)
-
-            ax.autoscale_view()
+            _plot_2d(ax, self, seed_args)
 
         # Add legend
         if material:
@@ -506,18 +407,10 @@ class SeedList:
         seed_lims = [np.array(s.geometry.limits).flatten() for s in self]
         mins = np.array(seed_lims)[:, 0::2].min(axis=0)
         maxs = np.array(seed_lims)[:, 1::2].max(axis=0)
-        xlim = (min(xlim[0], mins[0]), max(xlim[1], maxs[0]))
-        ylim = (min(ylim[0], mins[1]), max(ylim[1], maxs[1]))
-        if n == 2:
-            plt.axis('square')
-            ax.set_xlim(xlim)
-            ax.set_ylim(ylim)
-        if n == 3:
-            zlim = (min(zlim[0], mins[2]), max(zlim[1], maxs[2]))
-            ax.set_xlim(xlim)
-            ax.set_ylim(ylim)
-            ax.set_zlim(zlim)
-            _misc.axisEqual3D(ax)
+        s_lims = list(zip(mins, maxs))
+        lims = [(min(l1[0], l2[0]), max(l1[1], l2[1])) for l1, l2 in
+                zip(lims, s_lims)]
+        _misc.adjust_axes(ax, lims)
 
     def plot_breakdown(self, index_by='seed', material=[], loc=0, **kwargs):
         """Plot the breakdowns of the seeds in seed list.
@@ -934,6 +827,117 @@ def _plt_args(seeds, index_by, kwargs):
             else:
                 seed_args[seed_num][key] = val
     return seed_args
+
+
+def _get_axes(n):
+    if n == 2:
+        ax = plt.gca()
+    else:
+        ax = plt.gcf().gca(projection=Axes3D.name)
+    n_obj = _misc.ax_objects(ax)
+    if n_obj > 0:
+        xlim = ax.get_xlim()
+        ylim = ax.get_ylim()
+    else:
+        xlim = [float('inf'), -float('inf')]
+        ylim = [float('inf'), -float('inf')]
+
+    lims = [xlim, ylim]
+
+    if n == 3:
+        if n_obj > 0:
+            zlim = ax.get_zlim()
+        else:
+            zlim = [float('inf'), -float('inf')]
+        lims.append(zlim)
+    return ax, lims
+
+
+def _plot_2d(ax, seeds, seed_args):
+    ellipse_data = {'w': [], 'h': [], 'a': [], 'xy': []}
+    ec_kwargs = {}
+
+    rect_data = []
+    rect_kwargs = {}
+    for seed, args in zip(seeds, seed_args):
+        geom_name = type(seed.geometry).__name__.lower().strip()
+        if geom_name == 'ellipse':
+            a, b = seed.geometry.axes
+            cen = np.array(seed.position)
+            t = seed.geometry.angle_deg
+
+            ellipse_data['w'].append(2 * a)
+            ellipse_data['h'].append(2 * b)
+            ellipse_data['a'].append(t)
+            ellipse_data['xy'].append(cen)
+
+            for key, val in args.items():
+                val_list = ec_kwargs.get(key, [])
+                val_list.append(val)
+                ec_kwargs[key] = val_list
+
+        elif geom_name == 'circle':
+            diam = seed.geometry.diameter
+            cen = np.array(seed.position)
+
+            ellipse_data['w'].append(diam)
+            ellipse_data['h'].append(diam)
+            ellipse_data['a'].append(0)
+            ellipse_data['xy'].append(cen)
+
+            for key, val in args.items():
+                val_list = ec_kwargs.get(key, [])
+                val_list.append(val)
+                ec_kwargs[key] = val_list
+
+        elif geom_name in ['rectangle', 'square']:
+            w, h = seed.geometry.side_lengths
+            corner = seed.geometry.corner
+            t = seed.geometry.angle_deg
+            rect_inputs = {'width': w, 'height': h, 'angle': t,
+                            'xy': corner}
+            rect_data.append(rect_inputs)
+
+            for key, val in args.items():
+                val_list = rect_kwargs.get(key, [])
+                val_list.append(val)
+                rect_kwargs[key] = val_list
+
+        elif geom_name == 'nonetype':
+            pass
+
+        else:
+            e_str = 'Cannot plot groups of ' + geom_name
+            e_str += ' yet.'
+            raise NotImplementedError(e_str)
+
+    # abbreviate kwargs if all the same
+    for key, val in ec_kwargs.items():
+        v1 = val[0]
+        same = True
+        for v in val:
+            same &= v == v1
+        if same:
+            ec_kwargs[key] = v1
+
+    # Plot Circles and Ellipses
+    ax = plt.gca()
+
+    w = np.array(ellipse_data['w'])
+    h = np.array(ellipse_data['h'])
+    a = np.array(ellipse_data['a'])
+    xy = np.array(ellipse_data['xy'])
+    ec = collections.EllipseCollection(w, h, a, units='x', offsets=xy,
+                                        transOffset=ax.transData,
+                                        **ec_kwargs)
+    ax.add_collection(ec)
+
+    # Plot Rectangles
+    rects = [Rectangle(**rect_inputs) for rect_inputs in rect_data]
+    rc = collections.PatchCollection(rects, False, **rect_kwargs)
+    ax.add_collection(rc)
+
+    ax.autoscale_view()
 
 
 def sample_pos(distribution, n=1):

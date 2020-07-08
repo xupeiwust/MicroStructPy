@@ -113,3 +113,17 @@ def ax_objects(ax):
     for att in ['collections', 'images', 'lines', 'patches', 'texts']:
         n += len(getattr(ax, att))
     return n
+
+
+def adjust_axes(ax, lims):
+    """Adjust plot axes"""
+    n = len(lims)
+    if n == 2:
+        ax.set_aspect('equal', 'box')
+        ax.set_xlim(lims[0])
+        ax.set_ylim(lims[1])
+    if n == 3:
+        ax.set_xlim(lims[0])
+        ax.set_ylim(lims[1])
+        ax.set_zlim(lims[2])
+        axisEqual3D(ax)
