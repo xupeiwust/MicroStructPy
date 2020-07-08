@@ -545,7 +545,10 @@ class SeedList:
         i_position = i_sort[~positioned[i_sort]]
 
         # allowable overlap, relative to radius
-        rtol = kwargs.get('rtol', calc_rtol(self))
+        if kwargs.get('rtol', 'fit') == 'fit':
+            rtol = calc_rtol(self)
+        else:
+            rtol = kwargs['rtol']
 
         # position the remaining seeds
         i_reject = []
