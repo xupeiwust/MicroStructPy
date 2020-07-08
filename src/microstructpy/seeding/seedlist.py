@@ -131,12 +131,15 @@ class SeedList:
         if rng_seeds is None:
             rng_seeds = {}
 
-        # determine dimensionality, set default shape
-        default_shapes = {2: 'circle', 3: 'sphere'}
-        n_dim = None
         if isinstance(phases, dict):
             phases = [phases]
 
+        max_int = np.iinfo(np.int32).max
+        sample_rng_seeds = _set_sample_rng_seeds(phases, rng_seeds, max_int)
+
+        # determine dimensionality, set default shape
+        default_shapes = {2: 'circle', 3: 'sphere'}
+        n_dim = None
         for phase in phases:
             if 'shape' in phase:
                 n_dim = geometry.factory(phase['shape']).n_dim
@@ -153,9 +156,7 @@ class SeedList:
                 phase['shape'] = default_shapes[n_dim]
 
         # compute volume of each phase
-        vol_rng = rng_seeds.get('fraction', 0)
-        np.random.seed(vol_rng)
-
+        vol_rng = sample_rng_seeds['fraction']
         n_phases = len(phases)
         rel_vols = np.ones(n_phases)
         for i, phase in enumerate(phases):
@@ -163,89 +164,35 @@ class SeedList:
             try:
                 v_sample = -1
                 while v_sample < 0:
-                    v_sample = vol.rvs()
+                    v_sample = vol.rvs(random_state=vol_rng)
+                    vol_rng = (vol_rng + 1) % max_int
                 rel_vols[i] = v_sample
             except AttributeError:
                 rel_vols[i] = vol
         vol_fracs = rel_vols / sum(rel_vols)
         phase_vols = volume * vol_fracs
 
-        # compute number of seeds for each phase
-        if n_dim == 2:
-            avg_vols = [geometry.factory(p['shape']).area_expectation(**p)
-                        for p in phases]
-        else:
-            avg_vols = [geometry.factory(p['shape']).volume_expectation(**p)
-                        for p in phases]
-        weights = phase_vols / np.array(avg_vols)
-        pop_fracs = weights / sum(weights)
+        # compute population fractions for each phase
+        pop_fracs = _calc_pop_fracs(n_dim, phases, phase_vols)
+        hist_data = (pop_fracs, np.arange(len(phases)))
+        phase_dist = scipy.stats.rv_histogram(hist_data)
 
         seed_vol = 0
         seeds = []
-        max_int = np.iinfo(np.int32).max
         while seed_vol < volume:
             # Pick the phase
-            rng_seed = rng_seeds.get('phase', 0)
-            np.random.seed(rng_seed)
-            phase_num = np.random.choice(n_phases, p=pop_fracs)
+            rng_seed = sample_rng_seeds['phase']
+            phase_num = phase_dist.rvs(random_state=rng_seed)
+            sample_rng_seeds['phase'] = (rng_seed + 1) % max_int
             phase = phases[phase_num]
-            rng_seeds['phase'] = np.random.randint(max_int)
 
             # Create the seed
-            seed_shape = phase['shape']
-            seed_args = {'phase': phase_num}
-            kw_n = 0
-            for kw in set(phase) - set(_misc.gen_kws):
-                # set the RNG seed
-                rng_seed = rng_seeds.get(kw, 0)
-                np.random.seed(rng_seed)
-
-                # Sample, with special cases for orientation
-                if kw not in _misc.ori_kws:
-                    try:
-                        val = phase[kw].rvs(random_state=rng_seed)
-                    except AttributeError:
-                        val = phase[kw]
-                    seed_args[kw] = val
-                elif (phase[kw] == 'random') and (n_dim == 2):
-                    np.random.seed(rng_seed)
-                    seed_args['angle_deg'] = 360 * np.random.rand()
-                elif phase[kw] == 'random':
-                    np.random.seed(rng_seed)
-                    elems = np.random.normal(size=4)
-                    mag = np.linalg.norm(elems)
-                    elems /= mag
-                    val = Quaternion(elems).rotation_matrix
-                    seed_args[kw] = val
-                elif kw in ['rot_seq', 'rot_seq_deg', 'rot_seq_rad']:
-                    seq = []
-                    val = phase[kw]
-                    if not isinstance(val, list):
-                        val = [val]
-                    for rotation in val:
-                        rot_dict = {str(kw): rotation[kw] for kw in rotation}
-                        ax = rot_dict.get('axis', 'x')
-                        ang_dist = rot_dict.get('angle', 0)
-                        try:
-                            ang = ang_dist.rvs(random_state=rng_seed)
-                        except AttributeError:
-                            ang = ang_dist
-                        seq.append((ax, ang))
-                    seed_args[kw] = seq
-                else:
-                    try:
-                        val = phase[kw].rvs(random_state=rng_seed)
-                    except AttributeError:
-                        val = phase[kw]
-                    seed_args[kw] = val
-
-                # Update the RNG seed
-                np.random.seed(rng_seed + kw_n)
-                rng_seeds[kw] = np.random.randint(max_int - kw_n)
-                kw_n += 1
+            s_kwargs = _sample_phase_args(phase, sample_rng_seeds, n_dim,
+                                          max_int)
+            s_kwargs['phase'] = phase_num
 
             # Add seed to list
-            seed = _seed.Seed.factory(seed_shape, **seed_args)
+            seed = _seed.Seed.factory(phase['shape'], **s_kwargs)
             seeds.append(seed)
             seed_vol += seed.volume
 
@@ -927,6 +874,81 @@ class SeedList:
 
         self.seeds = self[keep_mask].seeds
 
+
+def _set_sample_rng_seeds(phases, rng_seeds, maxint):
+    rng_keys = list({k for p in phases for k in p} - set(_misc.gen_kws))
+    rng_keys.extend(['fraction', 'phase'])
+
+    n_keys = len(rng_keys)
+    int_step = maxint / n_keys
+    sample_seeds = {}
+    for i, k in enumerate(rng_keys):
+        rng_seed = rng_seeds.get(k, 0) + i * int_step
+        sample_seeds[k] = rng_seed % maxint
+    return sample_seeds
+
+
+def _calc_pop_fracs(n_dim, phases, phase_vols):
+    if n_dim == 2:
+        avg_vols = [geometry.factory(p['shape']).area_expectation(**p)
+                    for p in phases]
+    else:
+        avg_vols = [geometry.factory(p['shape']).volume_expectation(**p)
+                    for p in phases]
+    weights = phase_vols / np.array(avg_vols)
+    pop_fracs = weights / sum(weights)
+    return pop_fracs
+
+
+def _sample_phase_args(phase, sample_rng_seeds, n_dim, maxint):
+    seed_kwargs = {}
+    for kw in set(phase) - set(_misc.gen_kws):
+        rng_seed = sample_rng_seeds[kw]
+
+        # Sample, with special cases for orientation
+        if kw not in _misc.ori_kws:
+            try:
+                val = phase[kw].rvs(random_state=rng_seed)
+            except AttributeError:
+                val = phase[kw]
+            seed_kwargs[kw] = val
+        elif (phase[kw] == 'random') and (n_dim == 2):
+            np.random.seed(rng_seed)
+            ang_dist = scipy.stats.uniform(loc=0, scale=360)
+            seed_kwargs['angle_deg'] = ang_dist.rvs(random_state=rng_seed)
+        elif phase[kw] == 'random':
+            quat_dist = scipy.stats.norm()
+            elems = quat_dist.rvs(4, random_state=rng_seed)
+            mag = np.linalg.norm(elems)
+            elems /= mag
+            val = Quaternion(elems).rotation_matrix
+            seed_kwargs[kw] = val
+        elif kw in ['rot_seq', 'rot_seq_deg', 'rot_seq_rad']:
+            seq = []
+            val = phase[kw]
+            if not isinstance(val, list):
+                val = [val]
+            for rot_i, rotation in enumerate(val):
+                rot_dict = {str(kw): rotation[kw] for kw in rotation}
+                ax = rot_dict.get('axis', 'x')
+                ang_dist = rot_dict.get('angle', 0)
+                rot_rng = (rng_seed + rot_i) % maxint
+                try:
+                    ang = ang_dist.rvs(random_state=rot_rng)
+                except AttributeError:
+                    ang = ang_dist
+                seq.append((ax, ang))
+            seed_kwargs[kw] = seq
+        else:
+            try:
+                val = phase[kw].rvs(random_state=rng_seed)
+            except AttributeError:
+                val = phase[kw]
+            seed_kwargs[kw] = val
+
+        # Update the RNG seed
+        sample_rng_seeds[kw] = (rng_seed + 1) % maxint
+    return seed_kwargs
 
 def sample_pos(distribution, n=1):
     """ Sample position distribution
