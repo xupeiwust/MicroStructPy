@@ -367,7 +367,7 @@ class SeedList:
         """
         if material is None:
             material = []
-        seed_args = _plt_args(self, index_by)
+        seed_args = _plt_args(self, index_by, kwargs)
 
         n = self.__getitem__(0).geometry.n_dim
         if n == 2:
@@ -921,7 +921,7 @@ def _sample_phase_args(phase, sample_rng_seeds, n_dim, maxint):
     return seed_kwargs
 
 
-def _plt_args(seeds, index_by):
+def _plt_args(seeds, index_by, kwargs):
     seed_args = [{} for seed in seeds]
     for seed_num, seed in enumerate(seeds):
         phase_num = seed.phase
