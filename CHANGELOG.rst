@@ -6,6 +6,19 @@ All notable changes to this project will be documented in this file.
 The format is based on `Keep a Changelog`_,
 and this project adheres to `Semantic Versioning`_.
 
+`Unreleased`_
+--------------------------
+Changed
+'''''''
+- Copyright notices now use date range: (first year) - (current year).
+- Renamed ``geometry.ellipse`` module to avoid conflict with
+  ``lsq-ellipse`` module.
+
+Removed
+'''''''
+- Unused tangent sphere function function from ``_misc`` module.
+- Unused ``reflect`` methods from ellipse, ellipsoid, and n-sphere geometries.
+
 `1.3.2`_ -  2020-07-11
 --------------------------
 Added
@@ -27,16 +40,6 @@ Added
 Fixed
 '''''
 - Error in verification module for 2D uniform random orientations.
-
-Changed
-'''''''
-- Renamed ``geometry.ellipse`` module to avoid conflict with
-  ``lsq-ellipse`` module.
-
-Removed
-'''''''
-- Unused tangent sphere function function from ``_misc`` module.
-- Unused ``reflect`` methods from ellipse, ellipsoid, and n-sphere geometries.
 
 `1.3.0`_ - 2020-06-25
 --------------------------
