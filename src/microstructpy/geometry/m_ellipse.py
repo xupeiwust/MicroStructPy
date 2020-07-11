@@ -252,6 +252,14 @@ class Ellipse:
                 return 0.25 * np.pi * s_dist * s_dist
             return 0.25 * np.pi * s_dist.moment(2)
 
+        if 'area' in kwargs:
+            a_dist = kwargs['area']
+            try:
+                a_exp = a_dist.moment(1)
+            except AttributeError:
+                a_exp = a_dist
+            return a_exp
+
         if ('a' in kwargs) and ('b' in kwargs):
             exp = np.pi
             for kw in ('a', 'b'):
