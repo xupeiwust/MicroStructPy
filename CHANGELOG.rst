@@ -19,6 +19,12 @@ Removed
 - Unused tangent sphere function function from ``_misc`` module.
 - Unused ``reflect`` methods from ellipse, ellipsoid, and n-sphere geometries.
 
+`1.3.4`_ -  2020-08-31
+--------------------------
+Removed
+'''''''
+- Debug print statements from SeedList population fractions method.
+
 `1.3.3`_ -  2020-08-31
 --------------------------
 Added
@@ -154,7 +160,8 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.3...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.4...HEAD
+.. _`1.3.4`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.3...v1.3.4
 .. _`1.3.3`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.2...v1.3.3
 .. _`1.3.2`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.1...v1.3.2
 .. _`1.3.1`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.0...v1.3.1
