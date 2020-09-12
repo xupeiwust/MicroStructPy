@@ -43,9 +43,9 @@ class Circle(NSphere):
     # ----------------------------------------------------------------------- #
     def __init__(self, **kwargs):
         if 'area' in kwargs:
-            a = kwargs['area']
-            r = np.sqrt(a / np.pi)
-            kwargs['r'] = r
+            area = kwargs['area']
+            radius = np.sqrt(area / np.pi)
+            kwargs['r'] = radius
 
         NSphere.__init__(self, **kwargs)
         if len(self.center) == 0:
@@ -171,5 +171,5 @@ class Circle(NSphere):
             **kwargs (dict): Keyword arguments for matplotlib.
 
         """  # NOQA: E501
-        c = patches.Circle(self.center, self.r, **kwargs)
-        plt.gca().add_patch(c)
+        circ_patch = patches.Circle(self.center, self.r, **kwargs)
+        plt.gca().add_patch(circ_patch)
