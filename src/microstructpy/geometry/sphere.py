@@ -50,9 +50,9 @@ class Sphere(NSphere):
     # ----------------------------------------------------------------------- #
     def __init__(self, **kwargs):
         if 'volume' in kwargs:
-            v = kwargs['volume']
-            r = np.cbrt(3 * v / (4 * np.pi))
-            kwargs['r'] = r
+            volume = kwargs['volume']
+            radius = np.cbrt(3 * volume / (4 * np.pi))
+            kwargs['r'] = radius
 
         NSphere.__init__(self, **kwargs)
         if len(self.center) == 0:
@@ -159,11 +159,11 @@ class Sphere(NSphere):
 
         """  # NOQA: E501
         if len(plt.gcf().axes) == 0:
-            ax = plt.axes(projection=Axes3D.name)
+            axes = plt.axes(projection=Axes3D.name)
         else:
-            ax = plt.gca()
+            axes = plt.gca()
 
-        xx, yy, zz = _plot_pts(self.r, self.center)
+        plt_x, plt_y, plt_z = _plot_pts(self.r, self.center)
 
         mod_kwargs = {}
         for key, val in kwargs.items():
@@ -171,16 +171,16 @@ class Sphere(NSphere):
                 mod_kwargs['color'] = val
             else:
                 mod_kwargs[key] = val
-        ax.plot_surface(xx, yy, zz, **mod_kwargs)
+        axes.plot_surface(plt_x, plt_y, plt_z, **mod_kwargs)
 
 
 def _plot_pts(r=1, center=(0, 0, 0), n_pts=12):
-    u = np.linspace(0, 2 * np.pi, n_pts-1)
-    cv = np.linspace(-1, 1, n_pts)
-    uu, cvv = np.meshgrid(u, cv)
-    svv = np.sin(np.arccos(cvv))
+    param_u = np.linspace(0, 2 * np.pi, n_pts-1)
+    cosv = np.linspace(-1, 1, n_pts)
+    param_uu, cosvv = np.meshgrid(param_u, cosv)
+    sinvv = np.sin(np.arccos(cosvv))
 
-    xx = center[0] + r * np.cos(uu) * svv
-    yy = center[1] + r * np.sin(uu) * svv
-    zz = center[2] + r * cvv
-    return xx, yy, zz
+    plt_xx = center[0] + r * np.cos(param_uu) * sinvv
+    plt_yy = center[1] + r * np.sin(param_uu) * sinvv
+    plt_zz = center[2] + r * cosvv
+    return plt_xx, plt_yy, plt_zz
