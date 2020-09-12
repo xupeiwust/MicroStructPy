@@ -95,9 +95,9 @@ class Box(NBox):
 
         """  # NOQA: E501
         if len(plt.gcf().axes) == 0:
-            ax = plt.axes(projection=Axes3D.name)
+            axes = plt.axes(projection=Axes3D.name)
         else:
-            ax = plt.gca()
+            axes = plt.gca()
 
         xlim, ylim, zlim = self.limits  # pylint: disable=E0633
         # E0633: unpacking-non-sequence
@@ -105,21 +105,21 @@ class Box(NBox):
         inds = [(0, 0), (0, 1), (1, 1), (1, 0)]
 
         # x faces
-        f1 = np.array([(xlim[0], ylim[i], zlim[j]) for i, j in inds])
-        f2 = np.array([(xlim[1], ylim[i], zlim[j]) for i, j in inds])
+        face1 = np.array([(xlim[0], ylim[i], zlim[j]) for i, j in inds])
+        face2 = np.array([(xlim[1], ylim[i], zlim[j]) for i, j in inds])
 
         # y faces
-        f3 = np.array([(xlim[i], ylim[0], zlim[j]) for i, j in inds])
-        f4 = np.array([(xlim[i], ylim[1], zlim[j]) for i, j in inds])
+        face3 = np.array([(xlim[i], ylim[0], zlim[j]) for i, j in inds])
+        face4 = np.array([(xlim[i], ylim[1], zlim[j]) for i, j in inds])
 
         # z faces
-        f5 = np.array([(xlim[i], ylim[j], zlim[0]) for i, j in inds])
-        f6 = np.array([(xlim[i], ylim[j], zlim[1]) for i, j in inds])
+        face5 = np.array([(xlim[i], ylim[j], zlim[0]) for i, j in inds])
+        face6 = np.array([(xlim[i], ylim[j], zlim[1]) for i, j in inds])
 
         # plot
-        xy = [f1, f2, f3, f4, f5, f6]
-        pc = Poly3DCollection(xy, **kwargs)
-        ax.add_collection(pc)
+        faces = [face1, face2, face3, face4, face5, face6]
+        face_polys = Poly3DCollection(faces, **kwargs)
+        axes.add_collection(face_polys)
 
 
 # --------------------------------------------------------------------------- #
