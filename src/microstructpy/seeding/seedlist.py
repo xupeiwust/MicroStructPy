@@ -814,7 +814,7 @@ def _plot_2d(ax, seeds, seed_args):
     ax.add_collection(ec)
 
     # Plot Rectangles
-    rects = [Rectangle(**rect_inputs) for rect_inputs in rect_data]
+    rects = [Rectangle(**rect_inps) for rect_inps in rect_data]
     rc = collections.PatchCollection(rects, False, **rect_kwargs)
     ax.add_collection(rc)
 

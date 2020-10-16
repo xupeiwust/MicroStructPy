@@ -79,11 +79,12 @@ setup(
     ],
     install_requires=[
         'aabbtree>=2.5.0',
-        'matplotlib>=3.0.0',
         'pybind11',  # must come before meshpy for successful install
         'lsq-ellipse',
+        'matplotlib>=3.0.0',
         'meshpy>=2018.2.1',
         'numpy>=1.13.0',
+        'pygmsh>=7.0.2',
         'pyquaternion',
         'pyvoro-mmalahe',  # install issue with pyvoro
         'scipy',

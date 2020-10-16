@@ -145,9 +145,7 @@ def read_input(filename):
     """
     # Read in the file
     file_path = os.path.dirname(filename)
-
-    with open(filename, 'r') as file:
-        file_dict = xmltodict.parse(file.read())
+    file_dict = input2dict(filename)
 
     assert 'input' in file_dict, 'Root <input> not found in input file.'
     in_data = dict_convert(file_dict['input'], file_path)
@@ -173,12 +171,61 @@ def read_input(filename):
     return in_data
 
 
+def input2dict(filename, root_tag='input'):
+    """Read input file into a dictionary
+
+    This function reads an input file and creates a dictionary of strings
+    contained within the file.
+
+    Args:
+        filename: Name of the input file.
+
+    Returns:
+        collections.OrderedDict: Dictionary of input strings.
+
+    """
+
+    # Read in the file
+    with open(filename, 'r') as file:
+        file_dict = xmltodict.parse(file.read())
+    tag = list(file_dict.keys())[0]
+    assert tag == root_tag, repr(tag) + ' != ' + repr(root_tag)
+
+    return _include_expand(file_dict, filename, root_tag)
+
+
+def _include_expand(inp, filename, key):
+    if isinstance(inp,  str):
+        return inp
+    if isinstance(inp, list):
+        return [_include_expand(inp_i, filename, key) for inp_i in inp]
+
+    file_path = os.path.dirname(filename)
+    exp_dict = collections.OrderedDict()
+    for inp_key, inp_val in inp.items():
+        if inp_key == 'include':
+            includes = inp_val
+            if not isinstance(includes, list):
+                includes = [includes]
+            for inc_filename in includes:
+                if os.path.isabs(inc_filename):
+                    fname = inc_filename
+                else:
+                    fname = os.path.join(file_path, inc_filename)
+                inc_dict = input2dict(fname, key)
+                exp_dict.update(inc_dict[key])
+        else:
+            exp_dict[inp_key] = _include_expand(inp_val, filename, inp_key)
+    return exp_dict
+
+
 def run(phases, domain, verbose=False, restart=True, directory='.',
         filetypes={}, rng_seeds={}, plot_axes=True, rtol='fit', edge_opt=False,
-        edge_opt_n_iter=100,
+        edge_opt_n_iter=100, mesher='Triangle/TetGen',
         mesh_max_volume=float('inf'), mesh_min_angle=0,
-        mesh_max_edge_length=float('inf'), verify=False, color_by='material',
-        colormap='viridis', seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
+        mesh_max_edge_length=float('inf'), mesh_size=float('inf'),
+        verify=False, color_by='material', colormap='viridis',
+        seeds_kwargs={}, poly_kwargs={}, tri_kwargs={}):
     r"""Run MicroStructPy
 
     This is the primary run function for the package. It performs these steps:
@@ -252,6 +299,8 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         edge_opt_n_iter (int): *(optional)* Maximum number of iterations per
             edge during optimization. Ignored if `edge_opt` set to False.
             Defaults to 100.
+        mesher (str): {'Triangle/TetGen' | 'Triangle'  | 'TetGen' | 'gmsh'}
+            specify the mesh generator. Default is 'Triangle/TetGen'.
         mesh_max_volume (float): *(optional)* The maximum volume (area in 2D)
             of a mesh cell in the triangular mesh. Default is infinity,
             which turns off the maximum volume quality setting.
@@ -263,6 +312,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
             Value should be in the range 0-60.
         mesh_max_edge_length (float): *(optional)* The maximum edge length of
             elements along grain boundaries. Currently only supported in 2D.
+        mesh_size (float): The target size of the mesh elements. This
+            option is used with gmsh. Default is infinity, whihch turns off
+            this control.
         plot_axes (bool): *(optional)* Option to show the axes in output plots.
             When False, the plots are saved without axes and very tight
             borders. Defaults to True.
@@ -454,8 +506,9 @@ def run(phases, domain, verbose=False, restart=True, directory='.',
         if verbose:
             print('Creating triangular mesh.')
 
-        tmesh = TriMesh.from_polymesh(pmesh, phases, mesh_min_angle,
-                                      mesh_max_volume, mesh_max_edge_length)
+        tmesh = TriMesh.from_polymesh(pmesh, phases, mesher, mesh_min_angle,
+                                      mesh_max_volume, mesh_max_edge_length,
+                                      mesh_size)
 
     # Write triangular mesh
     tri_types = filetypes.get('tri', [])
@@ -938,8 +991,8 @@ def plot_tri(tmesh, phases, seeds, pmesh, plot_files=[], plot_axes=True,
         tmesh.element_attributes = old_e_att
         tmesh.facet_attributes = old_f_att
     else:
-        tmesh.plot(facecolors=facet_colors, index_by='attribute',
-                   **edge_kwargs)
+        fcs = {2: seed_colors, 3: facet_colors}[n_dim]
+        tmesh.plot(facecolors=fcs, index_by='attribute', **edge_kwargs)
 
     # save plot
     for fname in plot_files:
@@ -1020,6 +1073,7 @@ def dict_convert(dictionary, filepath='.'):
     for key in dictionary:
         val = dictionary[key]
         if any([s in key.lower() for s in ('filename', 'directory')]):
+            val = os.path.expanduser(val)
             if not os.path.isabs(val) and filepath:
                 new_val = os.path.abspath(os.path.join(filepath, val))
             else:

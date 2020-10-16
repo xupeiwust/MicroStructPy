@@ -19,6 +19,31 @@ Removed
 - Unused tangent sphere function function from ``_misc`` module.
 - Unused ``reflect`` methods from ellipse, ellipsoid, and n-sphere geometries.
 
+`1.4.1`_ 
+--------------------------
+Changed
+'''''''
+- Upgraded to pygmsh v7.0.2.
+
+`1.4.0`_ 
+--------------------------
+Added
+'''''''
+- References within XML input files using the ``<include>`` tag.
+- Support for gmsh. (addresses `#16`_)
+- Citation to SoftwareX publication.
+
+Fixed
+'''''''
+- Color-by seed number in CLI TriMesh plot function.
+- Expansion of "~" in input filepaths.
+
+`1.3.5`_ -  2020-09-20
+--------------------------
+Fixed
+'''''''
+- Tetrahedral mesh maximum volume setting no longer ignored.
+
 `1.3.4`_ -  2020-08-31
 --------------------------
 Removed
@@ -160,7 +185,10 @@ Added
 
 .. LINKS
 
-.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.4...HEAD
+.. _`Unreleased`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.1...HEAD
+.. _`1.4.1`: https://github.com/kip-hart/MicroStructPy/compare/v1.4.0...v1.4.1
+.. _`1.4.0`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.5...v1.4.0
+.. _`1.3.5`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.4...v1.3.5
 .. _`1.3.4`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.3...v1.3.4
 .. _`1.3.3`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.2...v1.3.3
 .. _`1.3.2`: https://github.com/kip-hart/MicroStructPy/compare/v1.3.1...v1.3.2
@@ -180,3 +208,4 @@ Added
 .. _`Semantic Versioning`: https://semver.org/spec/v2.0.0.html
 
 .. _`#14`: https://github.com/kip-hart/MicroStructPy/issues/14
+.. _`#16`: https://github.com/kip-hart/MicroStructPy/issues/16
