@@ -671,6 +671,7 @@ class PolyMesh(object):
 
         # Clip cells to domain
         voro = [_clip_cell(c, domain) for c in reduced_voro]
+            cens[:, -1] = 0.5
 
         # create global key point and facet lists
         pts_global = []
