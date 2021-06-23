@@ -1064,9 +1064,6 @@ def kp_loop(kp_pairs):
 
 def _clip_cell(cell_data, domain):
     domain_name = type(domain).__name__.lower()
-    if domain_name in ['rectangle', 'square', 'box', 'cube']:
-        return _tess2pyvoro(cell_data)
-
     if domain.n_dim == 2:
         # Take the portion of the cell in the z=0 plane
         pts_3d = np.array(cell_data.vertices())
@@ -1140,9 +1137,10 @@ def _clip_cell(cell_data, domain):
                          }
         return new_cell_data
 
-    w_str = 'Cannot clip cells to fit to a ' + domain_name + '.'
-    w_str = ' Currently boxes are the only suppported 3D geometries.'
-    warnings.warn(w_str, RuntimeWarning)
+    if domain_name not in ['rectangle', 'square', 'box', 'cube']:
+        w_str = 'Cannot clip cells to fit to a ' + domain_name + '.'
+        w_str = ' Currently boxes are the only suppported 3D geometries.'
+        warnings.warn(w_str, RuntimeWarning)
     return _tess2pyvoro(cell_data)
 
 
