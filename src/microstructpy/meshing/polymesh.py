@@ -1064,22 +1064,16 @@ def kp_loop(kp_pairs):
 
 def _clip_cell(cell_data, domain):
     domain_name = type(domain).__name__.lower()
+    if domain_name in ['rectangle', 'square', 'box', 'cube']:
+        if domain.n_dim == 2:
+            return _tessflatten(cell_data)
+        return _tess2pyvoro(cell_data)
+
     if domain.n_dim == 2:
         # Take the portion of the cell in the z=0 plane
-        pts_3d = np.array(cell_data.vertices())
-        pts_mask = pts_3d[:, -1] < 1
-        new_kps = np.arange(len(pts_3d))
-        new_kps[pts_mask] = np.arange(np.sum(pts_mask))
-        pts_2d = pts_3d[pts_mask, :-1]
-
-        face_mask = np.array(cell_data.neighbors()) > -5
-        faces_3d = [f for f, m in zip(cell_data.face_vertices(), face_mask) if m]
-        neighs_3d = [n for n, m in zip(cell_data.neighbors(), face_mask) if m]
-        faces_2d = [[new_kps[kp] for kp in f if pts_3d[kp][-1] < 1]
-                    for f in faces_3d]
-
-        faces = [{'adjacent_cell': n, 'vertices': f} for n, f in
-                 zip(neighs_3d, faces_2d)]
+        flattened_data = _tessflatten(cell_data)
+        pts_2d = flattened_data['vertices']
+        faces = flattened_data['faces']
 
         # Remove faces outside the domain
         new_faces = []
@@ -1137,10 +1131,9 @@ def _clip_cell(cell_data, domain):
                          }
         return new_cell_data
 
-    if domain_name not in ['rectangle', 'square', 'box', 'cube']:
-        w_str = 'Cannot clip cells to fit to a ' + domain_name + '.'
-        w_str = ' Currently boxes are the only suppported 3D geometries.'
-        warnings.warn(w_str, RuntimeWarning)
+    w_str = 'Cannot clip cells to fit to a ' + domain_name + '.'
+    w_str = ' Currently boxes are the only suppported 3D geometries.'
+    warnings.warn(w_str, RuntimeWarning)
     return _tess2pyvoro(cell_data)
 
 
@@ -1155,6 +1148,34 @@ def _tess2pyvoro(cell_data):
         'faces': faces,
         'vertices': pts,
         'volume': vol,
+    }
+    return new_cell_data
+
+
+def _tessflatten(cell_data):
+    # Take the portion of the cell in the z=0 plane
+    pts_3d = np.array(cell_data.vertices())
+    pts_mask = pts_3d[:, -1] < 1
+    new_kps = np.arange(len(pts_3d))
+    new_kps[pts_mask] = np.arange(np.sum(pts_mask))
+    pts_2d = pts_3d[pts_mask, :-1]
+
+    face_mask = np.array(cell_data.neighbors()) > -5
+    faces_3d = [f for f, m in zip(cell_data.face_vertices(), face_mask) if m]
+    neighs_3d = [n for n, m in zip(cell_data.neighbors(), face_mask) if m]
+    faces_2d = [[new_kps[kp] for kp in f if pts_3d[kp][-1] < 1]
+                for f in faces_3d]
+
+    faces = [{'adjacent_cell': n, 'vertices': f} for n, f in
+                zip(neighs_3d, faces_2d)]
+
+    within_loop = kp_loop([f['vertices'] for f in faces])
+    within_area = _loop_area(pts_2d, within_loop)
+
+    new_cell_data = {
+        'faces': faces,
+        'vertices': pts_2d,
+        'volume': within_area,
     }
     return new_cell_data
 
