@@ -20,7 +20,7 @@ import tempfile
 import warnings
 
 import numpy as np
-import tess
+import pyvoro
 from matplotlib import collections
 from matplotlib import patches
 from matplotlib import pyplot as plt
@@ -564,7 +564,7 @@ class PolyMesh(object):
         voro_dom = geom[n_dim](limits=domain.limits)
 
         # get domain limits
-        lims = tuple(zip(*voro_dom.limits))
+        lims = voro_dom.limits
 
         # clip points from voro domain
         flag_val = min(bkdwn2seed) - 1
@@ -575,15 +575,103 @@ class PolyMesh(object):
         cens = bkdwns[:, :-1]
         rads = bkdwns[:, -1]
 
-        if n_dim ==  2:
-            cens = np.copy(bkdwns)
+        # get block size
+        sz = 2 * max(rads)
+        if np.isclose(sz, 0):
+            sz = 0.1 * np.min([ub - lb for lb, ub in lims])
+
+        # remove extraneous breakdowns
+        removing_pts = True
+        while removing_pts:
+            # Create a temporary file to run pyvoro
+            call_str = 'import pyvoro\n\n'
+
+            call_str += 'pts = ['
+            beg_str = ',\n' + len('pts = [') * ' '
+            call_str += beg_str.join([str(np.array(p).tolist()) for p in cens])
+            call_str += ']\n\n'
+
+            call_str += 'lims = ' + str(np.array(lims).tolist()) + '\n\n'
+
+            call_str += 'sz = ' + str(sz) + '\n\n'
+
+            call_str += 'rads = ['
+            beg_str = ',\n' + len('rads = [') * ' '
+            call_str += beg_str.join([str(rad) for rad in rads])
+            call_str += ']\n\n'
+
+            call_str += 'pyvoro.compute_'
+            if n_dim == 2:
+                call_str += '2d_'
+            call_str += 'voronoi(pts, lims, sz, rads)\n'
+
+            file = tempfile.NamedTemporaryFile(mode='w', suffix='.py',
+                                               delete=False)
+            file.write(call_str)
+            call_filename = file.name
+            file.close()
+
+            # Run pyvoro
+            p = subprocess.Popen([sys.executable, call_filename],
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            p_out, _ = p.communicate()
+            try:
+                p.terminate()
+            except OSError:
+                pass
+
+            os.remove(call_filename)
+
+            # if there is output, remove those cells from the list
+            out_str = p_out.decode('utf-8')
+            if out_str:
+                inds = [int(s) for s in out_str.split(':')[-1].split()]
+                mask = np.full(len(rads), True)
+                mask[inds] = False
+                cens = cens[mask]
+                rads = rads[mask]
+                bkdwn2seed = bkdwn2seed[mask]
+            else:
+                removing_pts = False
+
+        missing_seeds = set(range(len(seedlist))) - set(bkdwn2seed)
+        assert not missing_seeds, str(missing_seeds)
+        # compute voronoi diagram
+        voro_fun = {2: pyvoro.compute_2d_voronoi,
+                    3: pyvoro.compute_voronoi}[n_dim]
+        voro = voro_fun(cens, lims, sz, rads)
+
+        # Get only the cells within the domain
+        cell_mask = np.full(len(bkdwn2seed), True, dtype='bool')
+        rect_doms = ['square', 'cube', 'rectangle', 'box', 'nbox']
+        if type(domain).__name__.lower() not in rect_doms:
+            for cell_num, cell in enumerate(voro):
+                cell_pts = np.array(cell['vertices'])
+                cell_mask[cell_num] = np.any(domain.within(cell_pts))
+        bkdwn2seed = bkdwn2seed[cell_mask]
+
+        new_cell_nums = np.full(len(cell_mask), -1, dtype='int')
+        new_cell_nums[cell_mask] = np.arange(np.sum(cell_mask))
+
+        reduced_voro = []
+        for old_cell_num, cell in enumerate(voro):
+            # update the numbers of adjacent cells
+            faces = cell['faces']
+            for face in faces:
+                old_adj_cell_num = face['adjacent_cell']
+                if old_adj_cell_num >= 0:
+                    new_adj_cell_num = new_cell_nums[old_adj_cell_num]
+                    face['adjacent_cell'] = new_adj_cell_num
+            cell['faces'] = faces
+
+            # add cell to voro
+            if cell_mask[old_cell_num]:
+                reduced_voro.append(cell)
+
+        # Clip cells to domain
+        voro = [_clip_cell(c, domain) for c in reduced_voro]
             cens[:, -1] = 0.5
-            lb_lims = list(lims[0]) + [0]
-            ub_lims = list(lims[1]) + [1]
-            lims = (tuple(lb_lims), tuple(ub_lims))
-        
-        tess_voro = tess.Container(cens, limits=lims, radii=rads)
-        voro = [_clip_cell(c, domain) for c in tess_voro]
 
         # create global key point and facet lists
         pts_global = []
@@ -1065,32 +1153,23 @@ def kp_loop(kp_pairs):
 def _clip_cell(cell_data, domain):
     domain_name = type(domain).__name__.lower()
     if domain_name in ['rectangle', 'square', 'box', 'cube']:
-        return _tess2pyvoro(cell_data)
+        return cell_data
 
     if domain.n_dim == 2:
-        # Take the portion of the cell in the z=0 plane
-        pts_3d = np.array(cell_data.vertices())
-        pts_mask = pts_3d[:, -1] < 1
-        new_kps = np.arange(len(pts_3d))
-        new_kps[pts_mask] = np.arange(np.sum(pts_mask))
-        pts_2d = pts_3d[pts_mask, :-1]
+        pts = np.array(cell_data['vertices'])
+        if np.all(domain.within(pts)):
+            return cell_data
 
-        face_mask = np.array(cell_data.neighbors()) > -5
-        faces_3d = [f for f, m in zip(cell_data.face_vertices(), face_mask) if m]
-        neighs_3d = [n for n, m in zip(cell_data.neighbors(), face_mask) if m]
-        faces_2d = [[new_kps[kp] for kp in f if pts_3d[kp][-1] < 1]
-                    for f in faces_3d]
-
-        faces = [{'adjacent_cell': n, 'vertices': f} for n, f in
-                 zip(neighs_3d, faces_2d)]
-
-        # Remove faces outside the domain
+        # split the edges that contain the boundary
+        new_adj = np.copy(cell_data['adjacency'])
         new_faces = []
+        new_pts = np.copy(cell_data['vertices'])
         new_kps = []
-        for face in faces:
+
+        for face in cell_data['faces']:
             adj_cell = face['adjacent_cell']
             verts = face['vertices']
-            face_pts = pts_2d[verts]
+            face_pts = pts[verts]
             pts_within = domain.within(face_pts)
             if np.all(pts_within) or np.all(~pts_within):
                 new_faces.append(face)
@@ -1098,24 +1177,27 @@ def _clip_cell(cell_data, domain):
             crossing_pt = _segment_cross(face_pts, domain)
 
             # Add point to list of vertices and face to list of faces
-            crossing_kp = len(pts_2d)
-            pts_2d = np.vstack((pts_2d, crossing_pt.reshape(1, -1)))
+            crossing_kp = len(new_pts)
+            new_pts = np.vstack((new_pts, crossing_pt.reshape(1, -1)))
             new_kps.append(crossing_kp)
 
-            for kp in verts:
+            for kp_i, kp in enumerate(verts):
+                kp_other = verts[1 - kp_i]
+                new_adj[kp] = [kp_other, crossing_kp]
+
                 new_verts = [kp, crossing_kp]
                 new_faces.append({'adjacent_cell': adj_cell,
                                   'vertices': new_verts})
+
         # add divider face
-        if new_kps:
-            new_faces.append({'adjacent_cell': -1, 'vertices': new_kps})
+        new_faces.append({'adjacent_cell': -1, 'vertices': new_kps})
 
         # Create cell within the domain
-        new_within = domain.within(pts_2d)
+        new_within = domain.within(new_pts)
         new_within[new_kps] = True
 
-        within_pts = pts_2d[new_within]
-        kp_conv = np.full(len(pts_2d), -1, dtype='int')
+        within_pts = new_pts[new_within]
+        kp_conv = np.full(len(new_pts), -1, dtype='int')
         kp_conv[new_within] = np.arange(np.sum(new_within))
 
         within_adj = [[] for pt in within_pts]
@@ -1134,31 +1216,18 @@ def _clip_cell(cell_data, domain):
         within_loop = kp_loop([f['vertices'] for f in within_faces])
         within_area = _loop_area(within_pts, within_loop)
 
-        new_cell_data = {'faces': within_faces,
+        new_cell_data = {'adjacency': within_adj,
+                         'faces': within_faces,
+                         'original': cell_data['original'],
                          'vertices': within_pts,
-                         'volume': within_area,
-                         }
+                         'volume': within_area}
+
         return new_cell_data
 
     w_str = 'Cannot clip cells to fit to a ' + domain_name + '.'
-    w_str = ' Currently boxes are the only suppported 3D geometries.'
+    w_str = ' Currently 3D geometries are not supported, other than boxes.'
     warnings.warn(w_str, RuntimeWarning)
-    return _tess2pyvoro(cell_data)
-
-
-def _tess2pyvoro(cell_data):
-    adj = cell_data.neighbors()
-    verts = cell_data.face_vertices()
-    faces = [{'adjacent_cell': a, 'vertices': v} for a, v in
-                zip(adj, verts)]
-    pts = cell_data.vertices()
-    vol = cell_data.volume()
-    new_cell_data = {
-        'faces': faces,
-        'vertices': pts,
-        'volume': vol,
-    }
-    return new_cell_data
+    return cell_data
 
 
 def _segment_cross(pts, domain):
