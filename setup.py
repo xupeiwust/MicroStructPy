@@ -86,6 +86,7 @@ setup(
         'pyquaternion',
         'pyvoro-mmalahe',  # install issue with pyvoro
         'scipy',
+        'tess',
         'xmltodict'
     ],
     entry_points={
