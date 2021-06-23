@@ -168,7 +168,7 @@ class NBox(object):
     # ----------------------------------------------------------------------- #
     # Within Test                                                             #
     # ----------------------------------------------------------------------- #
-    def within(self, points):
+    def within(self, points, strict=False):
         """Test if points are within n-box.
 
         This function tests whether a point or set of points are within the
@@ -177,6 +177,8 @@ class NBox(object):
 
         Args:
             points (list or numpy.ndarray): Point or list of points.
+            strict (bool): Strict comparison test. Set to False, the function
+                will check if within machine precision.
 
         Returns:
             bool or numpy.ndarray: Flags set to True for points in geometry.
@@ -189,7 +191,11 @@ class NBox(object):
         rel_pos = pts - np.array(self.center)
         min_dist = 0.5 * np.array(self.side_lengths)
 
-        mask = np.all(np.abs(rel_pos) <= min_dist, axis=-1)
+        eps = 1e-12
+        if strict:
+            eps = 0
+
+        mask = np.all(np.abs(rel_pos) <= min_dist*(1+eps), axis=-1)
         if single_pt:
             return mask[0]
         else:
